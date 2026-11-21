@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#f6f7fb; --card:#ffffff; --text:#1c2033; --muted:#6b7190; --line:#e3e6f0;
-    --cell:#f1f3f9; --free:#22c55e; --accent:#6366f1; --accent-text:#fff; --gold:#f59e0b; --danger:#ef4444;
+    --cell:#f1f3f9; --free:#22c55e; --maybe:#facc15; --busy:#f87171; --accent:#6366f1; --accent-text:#fff; --gold:#f59e0b; --danger:#ef4444;
   }
   @media (prefers-color-scheme: dark){
     :root{ --bg:#12141d; --card:#1b1e2b; --text:#eceefa; --muted:#9097b8; --line:#2c3042; --cell:#252938; --accent:#818cf8; --accent-text:#12141d; }
@@ -27,18 +27,25 @@
   .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
   .tabs button{flex:1;border:0;background:transparent;border-radius:9px}
   .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .brushes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+  .brushes button{padding:10px 4px;font-size:.9rem;border-width:2px;text-align:center}
+  .brushes button.on{border-color:var(--accent);font-weight:700;background:color-mix(in srgb,var(--accent) 14%,var(--card))}
   .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
   .nav h2{margin:0;font-size:1.15rem}
   .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;-webkit-user-select:none}
   .dow{text-align:center;color:var(--muted);font-size:.8rem;font-weight:600;padding:2px 0}
-  .day{position:relative;aspect-ratio:1/1;min-height:44px;border-radius:10px;background:var(--cell);display:flex;align-items:flex-start;justify-content:flex-start;padding:6px 7px;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid transparent}
+  .day{position:relative;aspect-ratio:1/1;min-height:44px;border-radius:10px;background:var(--cell);padding:6px 7px;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid transparent}
   .day.blank{background:transparent;cursor:default}
   .day.past{opacity:.38;cursor:not-allowed}
-  .day.mine{background:var(--free);color:#06260f}
+  .day.s-f{background:var(--free);color:#06260f}
+  .day.s-m{background:var(--maybe);color:#2b2200}
+  .day.s-b{background:var(--busy);color:#3a0707}
   .day.today{border-color:var(--accent)}
   .day.all{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
   .day.sel{outline:3px solid var(--accent);outline-offset:1px}
-  .count{position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:700;opacity:.8}
+  .mark{position:absolute;bottom:3px;right:6px;font-size:.95rem;font-weight:800}
+  .count{position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:700;opacity:.85}
+  .qm{position:absolute;bottom:4px;left:6px;font-size:.65rem;font-weight:700}
   .star{position:absolute;top:3px;right:5px;font-size:.8rem}
   .legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;margin-top:10px}
   .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:4px}
@@ -50,11 +57,17 @@
   .chip button{border:0;background:none;padding:0 2px;color:var(--muted)}
   .chip button:hover{color:var(--danger)}
   h3{margin:0 0 10px;font-size:1rem}
+  .lbl{font-weight:600;font-size:.9rem;margin:0 0 6px}
+  .blk{margin-bottom:14px}
+  .blk:last-child{margin-bottom:0}
   .muted{color:var(--muted);font-size:.9rem}
-  .names{margin-top:6px}
-  .names span{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:999px;font-size:.85rem}
-  .names .f{background:color-mix(in srgb,var(--free) 25%,var(--card))}
-  .names .b{background:var(--cell);color:var(--muted);text-decoration:line-through}
+  .detail{margin-top:12px}
+  .detail .g{margin-top:6px}
+  .detail span.n{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:999px;font-size:.85rem}
+  .n.f{background:color-mix(in srgb,var(--free) 28%,var(--card))}
+  .n.m{background:color-mix(in srgb,var(--maybe) 32%,var(--card))}
+  .n.b{background:color-mix(in srgb,var(--busy) 30%,var(--card))}
+  .n.x{background:var(--cell);color:var(--muted)}
   #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
   #toast.show{opacity:1}
   .hide{display:none!important}
@@ -63,7 +76,7 @@
 <body>
 <div class="wrap">
   <h1>📅 When are we all free?</h1>
-  <p class="sub">Mark the days you're free, share your link, and find the dates that work for everyone.</p>
+  <p class="sub">Mark your days. Everyone sees the updates live and the app finds the days that work for all of us.</p>
 
   <div class="card">
     <div class="row">
@@ -75,9 +88,19 @@
 
   <div class="card">
     <div class="tabs">
-      <button id="tabEdit" class="on">✏️ Mark my free days</button>
+      <button id="tabEdit" class="on">✏️ My days</button>
       <button id="tabGroup">👥 Group view</button>
     </div>
+
+    <div id="brushWrap">
+      <div class="brushes" id="brushes">
+        <button data-brush="f" class="on">✅ Free</button>
+        <button data-brush="m">❓ Not sure</button>
+        <button data-brush="b">❌ Busy</button>
+        <button data-brush="x">🧽 Clear</button>
+      </div>
+    </div>
+
     <div class="nav">
       <button id="prev" aria-label="Previous month">‹</button>
       <h2 id="monthLabel"></h2>
@@ -85,32 +108,33 @@
     </div>
     <div class="grid" id="dows"></div>
     <div class="grid" id="grid" style="margin-top:6px"></div>
-    <div class="legend" id="legendEdit"><span><i style="background:var(--free)"></i>I'm free</span><span>Tap or drag to mark days</span></div>
-    <div class="legend hide" id="legendGroup"><span><i style="background:var(--free)"></i>More green = more people free</span><span>⭐ everyone's free</span></div>
+
+    <div class="legend" id="legendEdit">
+      <span><i style="background:var(--free)"></i>Free</span>
+      <span><i style="background:var(--maybe)"></i>Not sure</span>
+      <span><i style="background:var(--busy)"></i>Busy</span>
+      <span>Pick a button, then tap or drag days. Unmarked = no answer yet.</span>
+    </div>
+    <div class="legend hide" id="legendGroup">
+      <span><i style="background:var(--free)"></i>Greener = more people free</span>
+      <span>⭐ everyone is free</span>
+      <span>❓2 = two people not sure</span>
+    </div>
     <div class="row hide" id="quick" style="margin-top:12px">
-      <button class="small" id="weekends">Select all weekends this month</button>
+      <button class="small" id="weekends">Apply to all weekends this month</button>
       <button class="small" id="clearMonth">Clear this month</button>
     </div>
-    <div id="detail" class="hide names" style="margin-top:12px"></div>
+    <div id="detail" class="detail hide"></div>
   </div>
 
   <div class="card">
-    <h3 id="bestTitle">Best dates</h3>
-    <div class="chips" id="best"></div>
+    <h3>Best dates</h3>
+    <div id="best"></div>
   </div>
 
   <div class="card">
     <h3>The group</h3>
-    <div class="chips" id="people" style="margin-bottom:14px"></div>
-    <div class="row">
-      <button class="primary" id="share">🔗 Copy my link</button>
-      <button id="download">⬇️ Download data.json</button>
-    </div>
-    <p class="muted" style="margin:10px 0 8px">Send your link to the group chat. When someone opens a friend's link, that friend's days are added to their calendar. Or paste a link here:</p>
-    <div class="row">
-      <input type="text" id="paste" placeholder="Paste a friend's link here">
-      <button id="addPaste">Add</button>
-    </div>
+    <div class="chips" id="people"></div>
   </div>
 </div>
 <div id="toast"></div>
@@ -120,17 +144,57 @@
   // ====== LIVE SYNC SETUP: paste your Firebase Realtime Database URL between the quotes ======
   // Example: 'https://my-friends-default-rtdb.europe-west1.firebasedatabase.app'
   const FIREBASE_URL = 'https://when-are-we-all-free-2918a-default-rtdb.europe-west1.firebasedatabase.app/';
-  // Everyone using the same room name shares one calendar. Change it if you want a private one.
-  const ROOM = new URLSearchParams(location.search).get('room') || 'our-group';
+  // The calendar's secret code comes from the link (...?room=SECRET), never from this file, so a stranger
+  // who finds the site sees nothing. Only people you send the full link to can open the calendar.
+  let ROOM = '';
+  try {
+    const q = new URLSearchParams(location.search).get('room');
+    if (q) localStorage.setItem('whenfree.room', q);          // remember it on this device
+    ROOM = q || localStorage.getItem('whenfree.room') || '';
+  } catch (e) { ROOM = new URLSearchParams(location.search).get('room') || ''; }
   // ==========================================================================================
+
   const CLOUD = !!FIREBASE_URL;
-  let cloudPeople = {};
-  let pushT;
+  const KEY = 'whenfree.v2';
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const isoOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+  const now = new Date();
+  const TODAY = isoOf(now.getFullYear(), now.getMonth(), now.getDate());
+  const label = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+  const empty = () => ({f: [], m: [], b: []});
+  const KINDS = ['f', 'm', 'b'];
+  const ICON = {f: '✓', m: '?', b: '✕'};
+
+  // ---------- state ----------
+  let me = '';              // the name saved on this device
+  let people = {};          // name -> {f: free days, m: not sure days, b: busy days}
+  let loaded = !CLOUD;      // true once the shared calendar has been read
+  let dirty = false, pushT = null, ver = 0;
+  let mode = 'edit', brush = 'f', selected = null, paint = null, lastPointer = 'mouse';
+  let view = {y: now.getFullYear(), m: now.getMonth()};
+
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s) { me = s.me || ''; if (!CLOUD && s.people) people = s.people; }
+    else { const o = JSON.parse(localStorage.getItem('whenfree.v1') || 'null'); if (o && o.me) me = o.me; }
+  } catch (e) {}
+  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify({me, people: CLOUD ? {} : people})); } catch (e) {} };
+
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // ---------- shared database (Firebase Realtime Database over plain HTTPS) ----------
   const cKey = n => n.replace(/[.$#\[\]\/]/g, '_');
   const cUrl = p => FIREBASE_URL.replace(/\/$/, '') + '/rooms/' + encodeURIComponent(ROOM) + p + '.json';
+  const parse = s => s ? String(s).split(',').filter(Boolean) : [];
+
   function setStatus(ok) {
-    const el = document.getElementById('status'); if (!el) return;
-    el.textContent = !CLOUD ? '⚠️ Live sync is not set up yet, so changes are only on this device.'
+    const el = $('#status');
+    el.textContent = !CLOUD ? '⚠️ Live sync is not set up yet (see README), so changes stay on this device.'
       : ok ? '🟢 Live: everyone\'s changes show up automatically.'
       : '🔴 Can\'t reach the shared calendar right now. Retrying...';
   }
@@ -140,20 +204,29 @@
       if (!r.ok) throw 0;
       const j = (await r.json()) || {};
       const out = {};
-      for (const v of Object.values(j)) if (v && v.n) out[v.n] = v.d ? String(v.d).split(',').filter(Boolean) : [];
-      cloudPeople = out; setStatus(true); render();
+      for (const v of Object.values(j)) {
+        if (v && v.n) out[v.n] = {f: parse(v.f !== undefined ? v.f : v.d), m: parse(v.m), b: parse(v.b)};
+      }
+      if (dirty && me && people[me]) out[me] = people[me];   // don't overwrite my edits that are still being sent
+      people = out; loaded = true; setStatus(true); render();
     } catch (e) { setStatus(false); }
   }
   function cloudPush() {
-    if (!CLOUD || !state.me) return;
-    clearTimeout(pushT);
+    if (!CLOUD || !me || !people[me]) return;
+    dirty = true; clearTimeout(pushT);
+    const v = ++ver;
     pushT = setTimeout(async () => {
+      const p = people[me]; if (!p) return;
+      const keep = k => p[k].filter(d => d >= TODAY).join(',');
       try {
-        const days = [...mine()].filter(d => d >= TODAY).sort().join(',');
-        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(state.me))), {method: 'PUT', body: JSON.stringify({n: state.me, d: days})});
+        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(me))), {method: 'PUT', body: JSON.stringify({n: me, f: keep('f'), m: keep('m'), b: keep('b')})});
+        if (r.ok && v === ver) dirty = false;
         setStatus(r.ok);
       } catch (e) { setStatus(false); }
     }, 400);
+  }
+  function cloudDelete(name) {
+    if (CLOUD) fetch(cUrl('/people/' + encodeURIComponent(cKey(name))), {method: 'DELETE'}).catch(() => {});
   }
   function cloudStart() {
     cloudPull();
@@ -164,75 +237,33 @@
     } catch (e) {}
     setInterval(cloudPull, 20000);
   }
+  const persist = () => { saveLocal(); cloudPush(); };
 
-  const KEY = 'whenfree.v1';
-  const $ = s => document.querySelector(s);
-  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const pad = n => String(n).padStart(2, '0');
-  const isoOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
-  const now = new Date();
-  const TODAY = isoOf(now.getFullYear(), now.getMonth(), now.getDate());
-  const label = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
-
-  // ---------- state ----------
-  let state = {me: '', people: {}};          // saved in this browser
-  let repoPeople = {};                        // loaded from data.json (shared via the repo)
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.people) state = s; } catch (e) {}
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} cloudPush(); };
-
-  let mode = 'edit';
-  let view = {y: now.getFullYear(), m: now.getMonth()};
-  let selected = null;
-  let painting = null;
-  let lastPointer = 'mouse';
-
-  const everyone = () => {
+  // ---------- helpers ----------
+  function index() {
     const out = {};
-    for (const [n, d] of Object.entries(repoPeople)) out[n] = new Set(d);
-    for (const [n, d] of Object.entries(cloudPeople)) out[n] = new Set(d);
-    for (const [n, d] of Object.entries(state.people)) {
-      if (!CLOUD || n === state.me) out[n] = new Set(d);   // with live sync, only my own days come from this device
-    }
+    for (const [n, p] of Object.entries(people)) out[n] = {f: new Set(p.f), m: new Set(p.m), b: new Set(p.b)};
     return out;
+  }
+  const stat = (name, iso) => {
+    const p = people[name]; if (!p) return null;
+    return p.f.includes(iso) ? 'f' : p.m.includes(iso) ? 'm' : p.b.includes(iso) ? 'b' : null;
   };
-  const mine = () => new Set(state.people[state.me] || []);
+  const brushVal = () => brush === 'x' ? null : brush;
 
-  function toast(msg) {
-    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
-  }
-
-  // ---------- share links ----------
-  const toB64 = str => { const b = new TextEncoder().encode(str); let s = ''; b.forEach(x => s += String.fromCharCode(x));
-    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
-  const fromB64 = str => { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '=';
-    const s = atob(str); return new TextDecoder().decode(Uint8Array.from(s, c => c.charCodeAt(0))); };
-  const dayNum = iso => { const [y, m, d] = iso.split('-').map(Number); return Math.floor(Date.UTC(y, m - 1, d) / 864e5); };
-  const numDay = n => new Date(n * 864e5).toISOString().slice(0, 10);
-
-  function makeLink() {
-    const days = [...mine()].filter(d => d >= TODAY).map(d => dayNum(d).toString(36)).sort();
-    const payload = toB64(JSON.stringify({n: state.me, d: days}));
-    return location.origin + location.pathname + '#s=' + payload;
-  }
-  function importFrom(text) {
-    const i = text.indexOf('#s=');
-    const code = i >= 0 ? text.slice(i + 3).trim() : text.trim();
-    try {
-      const obj = JSON.parse(fromB64(code));
-      const name = String(obj.n || '').trim().slice(0, 30);
-      if (!name || !Array.isArray(obj.d)) throw 0;
-      if (name === state.me) { toast("That's your own link 🙂"); return false; }
-      state.people[name] = obj.d.map(x => numDay(parseInt(x, 36))).sort();
-      save(); toast(`Added ${name}'s free days (${obj.d.length})`); return true;
-    } catch (e) { toast("Couldn't read that link"); return false; }
+  function setDay(iso, s) {
+    if (!me) { toast('Enter your name first 👆'); $('#name').focus(); return false; }
+    if (!loaded) { toast('Still connecting, try again in a second'); return false; }
+    if (iso < TODAY) return false;
+    const p = people[me] || (people[me] = empty());
+    for (const k of KINDS) p[k] = p[k].filter(d => d !== iso);
+    if (s) p[s].push(iso);
+    return true;
   }
 
   // ---------- rendering ----------
   function render() {
-    const ppl = everyone(), names = Object.keys(ppl), total = names.length;
-    const my = mine();
-    $('#name').value = state.me;
+    const ix = index(), names = Object.keys(ix), total = names.length;
     $('#monthLabel').textContent = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
 
     const first = new Date(view.y, view.m, 1);
@@ -242,103 +273,121 @@
     for (let i = 0; i < lead; i++) html += '<div class="day blank"></div>';
     for (let d = 1; d <= dim; d++) {
       const iso = isoOf(view.y, view.m, d);
-      const free = names.filter(n => ppl[n].has(iso)).length;
       const past = iso < TODAY;
       const cls = ['day'];
       if (past) cls.push('past');
       if (iso === TODAY) cls.push('today');
-      if (iso === selected && mode === 'group') cls.push('sel');
-      let style = '';
-      if (mode === 'edit') { if (my.has(iso)) cls.push('mine'); }
-      else if (free > 0 && total) {
-        const pct = Math.round(free / total * 85);
-        style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${free / total > .6 ? 'color:#06260f' : ''}"`;
+      let style = '', inner = '';
+      if (mode === 'edit') {
+        const s = stat(me, iso);
+        if (s) { cls.push('s-' + s); inner = `<span class="mark">${ICON[s]}</span>`; }
+      } else {
+        const f = names.filter(n => ix[n].f.has(iso)).length;
+        const m = names.filter(n => ix[n].m.has(iso)).length;
+        if (iso === selected) cls.push('sel');
+        if (f && total) {
+          const pct = Math.round(f / total * 85);
+          style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .6 ? 'color:#06260f' : ''}"`;
+        }
+        if (total >= 2 && f === total && !past) { cls.push('all'); inner += '<span class="star">⭐</span>'; }
+        if (f || m) inner += `<span class="count">${f}/${total}</span>`;
+        if (m) inner += `<span class="qm">❓${m}</span>`;
       }
-      const all = total >= 2 && free === total && !past;
-      if (all) cls.push('all');
-      html += `<div class="${cls.join(' ')}" data-iso="${iso}" ${style}>${d}`
-        + (all ? '<span class="star">⭐</span>' : '')
-        + (total && free ? `<span class="count">${free}/${total}</span>` : '') + '</div>';
+      html += `<div class="${cls.join(' ')}" data-iso="${iso}" ${style}>${d}${inner}</div>`;
     }
     $('#grid').innerHTML = html;
 
     $('#tabEdit').classList.toggle('on', mode === 'edit');
     $('#tabGroup').classList.toggle('on', mode === 'group');
+    $('#brushWrap').classList.toggle('hide', mode !== 'edit');
     $('#legendEdit').classList.toggle('hide', mode !== 'edit');
     $('#legendGroup').classList.toggle('hide', mode !== 'group');
     $('#quick').classList.toggle('hide', mode !== 'edit');
-    renderDetail(ppl, names);
-    renderBest(ppl, names);
-    renderPeople(ppl);
+    document.querySelectorAll('#brushes button').forEach(b => b.classList.toggle('on', b.dataset.brush === brush));
+    renderDetail(ix, names);
+    renderBest(ix, names);
+    renderPeople(ix, names);
   }
 
-  function renderDetail(ppl, names) {
+  function renderDetail(ix, names) {
     const el = $('#detail');
     if (mode !== 'group') { el.classList.add('hide'); return; }
     el.classList.remove('hide');
     if (!selected) { el.innerHTML = '<span class="muted">Tap a day to see who is free.</span>'; return; }
-    const f = names.filter(n => ppl[n].has(selected)), b = names.filter(n => !ppl[n].has(selected));
-    el.innerHTML = `<b>${label(selected)}</b><div>`
-      + f.map(n => `<span class="f">✅ ${esc(n)}</span>`).join('')
-      + b.map(n => `<span class="b">${esc(n)}</span>`).join('') + '</div>';
-  }
-
-  function renderBest(ppl, names) {
-    const total = names.length, el = $('#best');
-    if (!total) { el.innerHTML = '<span class="muted">Add your free days to get started.</span>'; return; }
-    const rows = [];
-    const start = new Date(); 
-    for (let i = 0; i < 365; i++) {
-      const dt = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-      const iso = isoOf(dt.getFullYear(), dt.getMonth(), dt.getDate());
-      const c = names.filter(n => ppl[n].has(iso)).length;
-      if (c > 0) rows.push({iso, c});
+    const groups = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
+    const seen = new Set();
+    let html = `<b>${label(selected)}</b>`;
+    for (const [k, title] of groups) {
+      const list = names.filter(n => ix[n][k].has(selected));
+      list.forEach(n => seen.add(n));
+      if (list.length) html += `<div class="g">${title}: ${list.map(n => `<span class="n ${k}">${esc(n)}</span>`).join('')}</div>`;
     }
-    if (!rows.length) { el.innerHTML = '<span class="muted">Nobody has marked any free days yet.</span>'; return; }
-    const max = Math.max(...rows.map(r => r.c));
-    const top = rows.filter(r => r.c === max).slice(0, 10);
-    const everyoneFree = max === total && total >= 2;
-    $('#bestTitle').textContent = everyoneFree ? '⭐ Everyone is free on' : (total < 2 ? 'Your free dates' : `Best matches (${max} of ${total} free)`);
-    el.innerHTML = top.map(r => `<span class="chip ${everyoneFree ? 'best' : 'good'}" data-jump="${r.iso}"><b>${label(r.iso)}</b> ${r.c}/${total}</span>`).join('');
+    const none = names.filter(n => !seen.has(n));
+    if (none.length) html += `<div class="g">⚪ No answer: ${none.map(n => `<span class="n x">${esc(n)}</span>`).join('')}</div>`;
+    el.innerHTML = html;
   }
 
-  function renderPeople(ppl) {
-    const el = $('#people'), names = Object.keys(ppl);
+  function renderBest(ix, names) {
+    const total = names.length, el = $('#best');
+    if (!total) { el.innerHTML = '<span class="muted">Add your name and mark your days to get started.</span>'; return; }
+    const rows = [];
+    for (let i = 0; i < 365; i++) {
+      const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const iso = isoOf(dt.getFullYear(), dt.getMonth(), dt.getDate());
+      const f = names.filter(n => ix[n].f.has(iso)).length;
+      const m = names.filter(n => ix[n].m.has(iso)).length;
+      if (f || m) rows.push({iso, f, m});
+    }
+    if (!rows.length) { el.innerHTML = '<span class="muted">Nobody has marked any days yet.</span>'; return; }
+    const chip = (r, cls) => `<span class="chip ${cls}" data-jump="${r.iso}"><b>${label(r.iso)}</b> ${r.f}/${total}${r.m ? ' · ❓' + r.m : ''}</span>`;
+    const block = (title, list, cls) => `<div class="blk"><div class="lbl">${title}</div><div class="chips">${list.slice(0, 12).map(r => chip(r, cls)).join('')}</div></div>`;
+    let html = '';
+    if (total >= 2) {
+      const all = rows.filter(r => r.f === total);
+      const maybe = rows.filter(r => r.f < total && r.f + r.m === total);
+      if (all.length) html += block('⭐ Everyone is free', all, 'best');
+      if (maybe.length) html += block('❓ Could work if the "not sure" people say yes', maybe, 'good');
+      if (!html) {
+        const top = rows.filter(r => r.f > 0).sort((a, b) => b.f - a.f || b.m - a.m || (a.iso < b.iso ? -1 : 1));
+        html = top.length ? block('Closest matches so far', top, 'good') : '<span class="muted">Nobody has marked a free day yet.</span>';
+      }
+    } else {
+      const mine = rows.filter(r => r.f > 0);
+      html = mine.length ? block('Your free days', mine, 'good') : '<span class="muted">Mark some free days to get started.</span>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderPeople(ix, names) {
+    const el = $('#people');
     if (!names.length) { el.innerHTML = '<span class="muted">Nobody yet.</span>'; return; }
     el.innerHTML = names.map(n => {
-      const cnt = [...ppl[n]].filter(d => d >= TODAY).length;
-      const local = n in state.people, you = n === state.me;
-      return `<span class="chip"><b>${esc(n)}${you ? ' (you)' : ''}</b><span class="muted">${cnt} days</span>`
-        + (local && !you ? `<button data-rm="${esc(n)}" title="Remove">✕</button>` : '') + '</span>';
+      const cnt = [...ix[n].f, ...ix[n].m, ...ix[n].b].filter(d => d >= TODAY).length;
+      return `<span class="chip"><b>${esc(n)}${n === me ? ' (you)' : ''}</b><span class="muted">${cnt} days marked</span>`
+        + `<button data-rm="${esc(n)}" title="Remove">✕</button></span>`;
     }).join('');
   }
 
-  // ---------- editing ----------
-  function setDay(iso, on) {
-    if (!state.me) { toast('Enter your name first 👆'); $('#name').focus(); return false; }
-    if (iso < TODAY) return false;
-    const s = mine(); on ? s.add(iso) : s.delete(iso);
-    state.people[state.me] = [...s].sort();
-    return true;
-  }
+  // ---------- marking days ----------
   const dayEl = e => e.target.closest('.day[data-iso]');
 
   $('#grid').addEventListener('pointerdown', e => {
     lastPointer = e.pointerType;
     const el = dayEl(e); if (!el || mode !== 'edit' || e.pointerType !== 'mouse') return;
-    painting = !mine().has(el.dataset.iso);
-    if (setDay(el.dataset.iso, painting)) { save(); render(); } else painting = null;
+    paint = {s: stat(me, el.dataset.iso) === brushVal() ? null : brushVal()};
+    if (setDay(el.dataset.iso, paint.s)) { persist(); render(); } else paint = null;
   });
   $('#grid').addEventListener('pointerover', e => {
-    const el = dayEl(e); if (!el || painting === null) return;
-    if (setDay(el.dataset.iso, painting)) { save(); render(); }
+    const el = dayEl(e); if (!el || !paint) return;
+    if (setDay(el.dataset.iso, paint.s)) { persist(); render(); }
   });
-  document.addEventListener('pointerup', () => { painting = null; });
+  document.addEventListener('pointerup', () => { paint = null; });
   $('#grid').addEventListener('click', e => {
     const el = dayEl(e); if (!el) return;
     if (mode === 'group') { selected = el.dataset.iso; render(); return; }
-    if (lastPointer === 'mouse') return;       // already handled on pointerdown
-    if (setDay(el.dataset.iso, !mine().has(el.dataset.iso))) { save(); render(); }
+    if (lastPointer === 'mouse') return;       // mouse clicks were already handled on pointerdown
+    const iso = el.dataset.iso;
+    if (setDay(iso, stat(me, iso) === brushVal() ? null : brushVal())) { persist(); render(); }
   });
 
   // ---------- controls ----------
@@ -346,30 +395,46 @@
   $('#tabGroup').onclick = () => { mode = 'group'; render(); };
   $('#prev').onclick = () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } render(); };
   $('#next').onclick = () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } render(); };
+  $('#brushes').addEventListener('click', e => {
+    const b = e.target.closest('button[data-brush]'); if (!b) return;
+    brush = b.dataset.brush; render();
+  });
 
   $('#saveName').onclick = () => {
-    const n = $('#name').value.trim().slice(0, 30);
-    if (!n) { toast('Type your name first'); return; }
-    if (n !== state.me && state.people[n]) { toast('That name is already in the group'); return; }
-    const old = state.me;
-    if (old && state.people[old]) { state.people[n] = state.people[old]; delete state.people[old]; }
-    if (CLOUD && old && old !== n) fetch(cUrl('/people/' + encodeURIComponent(cKey(old))), {method: 'DELETE'}).catch(() => {});
-    state.me = n; if (!state.people[n]) state.people[n] = [];
-    save(); render(); toast(`Hi ${n}! Now tap the days you're free.`);
+    const raw = $('#name').value.trim().slice(0, 30);
+    if (!raw) { toast('Type your name first'); return; }
+    if (CLOUD && !loaded) { toast('Still connecting, try again in a second'); return; }
+    const existing = Object.keys(people).find(n => n.toLowerCase() === raw.toLowerCase());
+    const old = me;
+    let created = false;
+    if (existing) {
+      if (existing !== old && !confirm(`"${existing}" is already in the group. Is that you?\n\nOK = yes, continue as ${existing}\nCancel = pick a different name`)) return;
+      me = existing;          // use the saved days, never overwrite them
+    } else {
+      if (old && people[old]) { people[raw] = people[old]; delete people[old]; cloudDelete(old); }
+      else people[raw] = empty();
+      me = raw; created = true;
+    }
+    $('#name').value = me;
+    saveLocal(); if (created) cloudPush();
+    render(); toast(`Hi ${me}! Pick a button and tap the days.`);
   };
   $('#name').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveName').click(); });
 
   $('#weekends').onclick = () => {
-    if (!state.me) { toast('Enter your name first 👆'); return; }
+    if (!me) { toast('Enter your name first 👆'); return; }
     const dim = new Date(view.y, view.m + 1, 0).getDate();
-    for (let d = 1; d <= dim; d++) { const dow = new Date(view.y, view.m, d).getDay(); if (dow === 0 || dow === 6) setDay(isoOf(view.y, view.m, d), true); }
-    save(); render();
+    for (let d = 1; d <= dim; d++) {
+      const dow = new Date(view.y, view.m, d).getDay();
+      if (dow === 0 || dow === 6) setDay(isoOf(view.y, view.m, d), brushVal());
+    }
+    persist(); render();
   };
   $('#clearMonth').onclick = () => {
-    if (!state.me) return;
+    if (!me || !people[me]) return;
     const prefix = isoOf(view.y, view.m, 1).slice(0, 7);
-    state.people[state.me] = (state.people[state.me] || []).filter(d => !d.startsWith(prefix));
-    save(); render();
+    for (const k of KINDS) people[me][k] = people[me][k].filter(d => !d.startsWith(prefix));
+    persist(); render();
   };
 
   $('#best').addEventListener('click', e => {
@@ -381,44 +446,24 @@
   $('#people').addEventListener('click', e => {
     const b = e.target.closest('[data-rm]'); if (!b) return;
     const n = b.dataset.rm;
-    if (confirm(`Remove ${n} from this browser's calendar?`)) { delete state.people[n]; save(); render(); }
+    if (!confirm(`Remove ${n} from the group? Their days will be deleted for everyone.`)) return;
+    delete people[n]; cloudDelete(n);
+    if (n === me) me = '';
+    saveLocal(); render();
   });
 
-  $('#share').onclick = async () => {
-    if (!state.me) { toast('Enter your name first 👆'); $('#name').focus(); return; }
-    const link = makeLink();
-    try { await navigator.clipboard.writeText(link); toast('Link copied! Send it to the group 🎉'); }
-    catch (e) { prompt('Copy this link and send it to the group:', link); }
-  };
-  $('#addPaste').onclick = () => {
-    const v = $('#paste').value.trim(); if (!v) return;
-    if (importFrom(v)) { $('#paste').value = ''; render(); }
-  };
-  $('#download').onclick = () => {
-    const out = {};
-    for (const [n, d] of Object.entries(everyone())) out[n] = [...d].filter(x => x >= TODAY).sort();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], {type: 'application/json'}));
-    a.download = 'data.json'; a.click();
-    toast('Upload this file to your repo to share it with everyone');
-  };
-
   // ---------- startup ----------
-  async function init() {
-    try {
-      const r = await fetch('data.json', {cache: 'no-store'});
-      if (r.ok) { const j = await r.json(); for (const [n, d] of Object.entries(j)) if (Array.isArray(d)) repoPeople[n] = d; }
-    } catch (e) {}
-    if (location.hash.startsWith('#s=')) {
-      importFrom(location.hash);
-      history.replaceState(null, '', location.pathname + location.search);
-    }
-    if (CLOUD) cloudStart(); else setStatus(null);
-    render();
-    if (state.me) cloudPush();
-    if (!state.me) toast('Start by entering your name 👋');
+  if (CLOUD && !ROOM) {
+    document.querySelector('.wrap').innerHTML = '<h1>🔒 Private calendar</h1><div class="card"><p>This calendar only opens with the private link your friend sent you.</p><p class="muted">Open that full link (it ends with <b>?room=</b> and a code) once, and this device will remember it.</p></div>';
+    return;
   }
-  init();
+  const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  $('#dows').innerHTML = dows.map(d => `<div class="dow">${d}</div>`).join('');
+  $('#name').value = me;
+  setStatus(CLOUD ? true : null);
+  if (CLOUD) { $('#status').textContent = 'Connecting...'; cloudStart(); }
+  render();
+  if (!me) toast('Start by entering your name 👋');
 })();
 </script>
 </body>
