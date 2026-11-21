@@ -438,15 +438,21 @@
         const m = names.filter(n => ix[n].m.has(iso)).length;
         const b = names.filter(n => ix[n].b.has(iso)).length;
         if (iso === selected) cls.push('sel');
-        if (f && total && !hang) {
-          const pct = Math.round(f / total * 85);
-          style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .6 ? 'color:#06260f' : ''}"`;
+        if (total && !hang) {
+          if (b > 0) {
+            // Any busy response makes the group day red; stronger red means more people busy.
+            const pct = Math.max(28, Math.round(b / total * 85));
+            style = `style="background:color-mix(in srgb,var(--busy) ${pct}%,var(--cell));color:#3a0707"`;
+          } else if (f > 0) {
+            const pct = Math.round(f / total * 85);
+            style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .6 ? 'color:#06260f' : ''}"`;
+          }
         }
         const all = total >= 2 && f === total && !past;
         if (all) cls.push('all');
         if (hang) inner += '<span class="hg">🎉</span>';
         else if (all) inner += '<span class="star">⭐</span>';
-        if (f || m || hang) inner += `<span class="count">${hang && all ? '⭐' : ''}${f}/${total}</span>`;
+        if (total) inner += `<span class="count">${hang && all ? '⭐' : ''}${f}/${total}</span>`;
         const side = [m ? '❓' + m : '', hang && b ? '❌' + b : ''].filter(Boolean).join(' ');
         if (side) inner += `<span class="qm">${side}</span>`;
       }
