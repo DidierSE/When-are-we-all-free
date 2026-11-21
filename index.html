@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When Are We Free?</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --text:#1c2033; --muted:#6b7190; --line:#e3e6f0;
+    --cell:#f1f3f9; --free:#22c55e; --accent:#6366f1; --accent-text:#fff; --gold:#f59e0b; --danger:#ef4444;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#12141d; --card:#1b1e2b; --text:#eceefa; --muted:#9097b8; --line:#2c3042; --cell:#252938; --accent:#818cf8; --accent-text:#12141d; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:900px;margin:0 auto;padding:16px}
+  h1{font-size:1.5rem;margin:8px 0 2px}
+  .sub{color:var(--muted);margin:0 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  input[type=text]{flex:1;min-width:140px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 14px;border-radius:10px}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
+  button.small{padding:5px 10px;font-size:.85rem}
+  .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
+  .tabs button{flex:1;border:0;background:transparent;border-radius:9px}
+  .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .nav h2{margin:0;font-size:1.15rem}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;-webkit-user-select:none}
+  .dow{text-align:center;color:var(--muted);font-size:.8rem;font-weight:600;padding:2px 0}
+  .day{position:relative;aspect-ratio:1/1;min-height:44px;border-radius:10px;background:var(--cell);display:flex;align-items:flex-start;justify-content:flex-start;padding:6px 7px;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid transparent}
+  .day.blank{background:transparent;cursor:default}
+  .day.past{opacity:.38;cursor:not-allowed}
+  .day.mine{background:var(--free);color:#06260f}
+  .day.today{border-color:var(--accent)}
+  .day.all{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
+  .day.sel{outline:3px solid var(--accent);outline-offset:1px}
+  .count{position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:700;opacity:.8}
+  .star{position:absolute;top:3px;right:5px;font-size:.8rem}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;margin-top:10px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:var(--cell);border-radius:999px;padding:6px 12px;font-size:.9rem;display:inline-flex;gap:8px;align-items:center}
+  .chip b{font-weight:600}
+  .chip.best{background:color-mix(in srgb,var(--gold) 25%,var(--card));cursor:pointer}
+  .chip.good{cursor:pointer}
+  .chip button{border:0;background:none;padding:0 2px;color:var(--muted)}
+  .chip button:hover{color:var(--danger)}
+  h3{margin:0 0 10px;font-size:1rem}
+  .muted{color:var(--muted);font-size:.9rem}
+  .names{margin-top:6px}
+  .names span{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:999px;font-size:.85rem}
+  .names .f{background:color-mix(in srgb,var(--free) 25%,var(--card))}
+  .names .b{background:var(--cell);color:var(--muted);text-decoration:line-through}
+  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+  #toast.show{opacity:1}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📅 When are we all free?</h1>
+  <p class="sub">Mark the days you're free, share your link, and find the dates that work for everyone.</p>
+
+  <div class="card">
+    <div class="row">
+      <input type="text" id="name" placeholder="Your name" maxlength="30" autocomplete="off">
+      <button class="primary" id="saveName">Save name</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button id="tabEdit" class="on">✏️ Mark my free days</button>
+      <button id="tabGroup">👥 Group view</button>
+    </div>
+    <div class="nav">
+      <button id="prev" aria-label="Previous month">‹</button>
+      <h2 id="monthLabel"></h2>
+      <button id="next" aria-label="Next month">›</button>
+    </div>
+    <div class="grid" id="dows"></div>
+    <div class="grid" id="grid" style="margin-top:6px"></div>
+    <div class="legend" id="legendEdit"><span><i style="background:var(--free)"></i>I'm free</span><span>Tap or drag to mark days</span></div>
+    <div class="legend hide" id="legendGroup"><span><i style="background:var(--free)"></i>More green = more people free</span><span>⭐ everyone's free</span></div>
+    <div class="row hide" id="quick" style="margin-top:12px">
+      <button class="small" id="weekends">Select all weekends this month</button>
+      <button class="small" id="clearMonth">Clear this month</button>
+    </div>
+    <div id="detail" class="hide names" style="margin-top:12px"></div>
+  </div>
+
+  <div class="card">
+    <h3 id="bestTitle">Best dates</h3>
+    <div class="chips" id="best"></div>
+  </div>
+
+  <div class="card">
+    <h3>The group</h3>
+    <div class="chips" id="people" style="margin-bottom:14px"></div>
+    <div class="row">
+      <button class="primary" id="share">🔗 Copy my link</button>
+      <button id="download">⬇️ Download data.json</button>
+    </div>
+    <p class="muted" style="margin:10px 0 8px">Send your link to the group chat. When someone opens a friend's link, that friend's days are added to their calendar. Or paste a link here:</p>
+    <div class="row">
+      <input type="text" id="paste" placeholder="Paste a friend's link here">
+      <button id="addPaste">Add</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+(() => {
+  const KEY = 'whenfree.v1';
+  const $ = s => document.querySelector(s);
+  const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const isoOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+  const now = new Date();
+  const TODAY = isoOf(now.getFullYear(), now.getMonth(), now.getDate());
+  const label = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+
+  // ---------- state ----------
+  let state = {me: '', people: {}};          // saved in this browser
+  let repoPeople = {};                        // loaded from data.json (shared via the repo)
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.people) state = s; } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+  let mode = 'edit';
+  let view = {y: now.getFullYear(), m: now.getMonth()};
+  let selected = null;
+  let painting = null;
+  let lastPointer = 'mouse';
+
+  const everyone = () => {
+    const out = {};
+    for (const [n, d] of Object.entries(repoPeople)) out[n] = new Set(d);
+    for (const [n, d] of Object.entries(state.people)) out[n] = new Set(d);
+    return out;
+  };
+  const mine = () => new Set(state.people[state.me] || []);
+
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // ---------- share links ----------
+  const toB64 = str => { const b = new TextEncoder().encode(str); let s = ''; b.forEach(x => s += String.fromCharCode(x));
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const fromB64 = str => { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '=';
+    const s = atob(str); return new TextDecoder().decode(Uint8Array.from(s, c => c.charCodeAt(0))); };
+  const dayNum = iso => { const [y, m, d] = iso.split('-').map(Number); return Math.floor(Date.UTC(y, m - 1, d) / 864e5); };
+  const numDay = n => new Date(n * 864e5).toISOString().slice(0, 10);
+
+  function makeLink() {
+    const days = [...mine()].filter(d => d >= TODAY).map(d => dayNum(d).toString(36)).sort();
+    const payload = toB64(JSON.stringify({n: state.me, d: days}));
+    return location.origin + location.pathname + '#s=' + payload;
+  }
+  function importFrom(text) {
+    const i = text.indexOf('#s=');
+    const code = i >= 0 ? text.slice(i + 3).trim() : text.trim();
+    try {
+      const obj = JSON.parse(fromB64(code));
+      const name = String(obj.n || '').trim().slice(0, 30);
+      if (!name || !Array.isArray(obj.d)) throw 0;
+      if (name === state.me) { toast("That's your own link 🙂"); return false; }
+      state.people[name] = obj.d.map(x => numDay(parseInt(x, 36))).sort();
+      save(); toast(`Added ${name}'s free days (${obj.d.length})`); return true;
+    } catch (e) { toast("Couldn't read that link"); return false; }
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    const ppl = everyone(), names = Object.keys(ppl), total = names.length;
+    const my = mine();
+    $('#name').value = state.me;
+    $('#monthLabel').textContent = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+
+    const first = new Date(view.y, view.m, 1);
+    const lead = (first.getDay() + 6) % 7;
+    const dim = new Date(view.y, view.m + 1, 0).getDate();
+    let html = '';
+    for (let i = 0; i < lead; i++) html += '<div class="day blank"></div>';
+    for (let d = 1; d <= dim; d++) {
+      const iso = isoOf(view.y, view.m, d);
+      const free = names.filter(n => ppl[n].has(iso)).length;
+      const past = iso < TODAY;
+      const cls = ['day'];
+      if (past) cls.push('past');
+      if (iso === TODAY) cls.push('today');
+      if (iso === selected && mode === 'group') cls.push('sel');
+      let style = '';
+      if (mode === 'edit') { if (my.has(iso)) cls.push('mine'); }
+      else if (free > 0 && total) {
+        const pct = Math.round(free / total * 85);
+        style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${free / total > .6 ? 'color:#06260f' : ''}"`;
+      }
+      const all = total >= 2 && free === total && !past;
+      if (all) cls.push('all');
+      html += `<div class="${cls.join(' ')}" data-iso="${iso}" ${style}>${d}`
+        + (all ? '<span class="star">⭐</span>' : '')
+        + (total && free ? `<span class="count">${free}/${total}</span>` : '') + '</div>';
+    }
+    $('#grid').innerHTML = html;
+
+    $('#tabEdit').classList.toggle('on', mode === 'edit');
+    $('#tabGroup').classList.toggle('on', mode === 'group');
+    $('#legendEdit').classList.toggle('hide', mode !== 'edit');
+    $('#legendGroup').classList.toggle('hide', mode !== 'group');
+    $('#quick').classList.toggle('hide', mode !== 'edit');
+    renderDetail(ppl, names);
+    renderBest(ppl, names);
+    renderPeople(ppl);
+  }
+
+  function renderDetail(ppl, names) {
+    const el = $('#detail');
+    if (mode !== 'group') { el.classList.add('hide'); return; }
+    el.classList.remove('hide');
+    if (!selected) { el.innerHTML = '<span class="muted">Tap a day to see who is free.</span>'; return; }
+    const f = names.filter(n => ppl[n].has(selected)), b = names.filter(n => !ppl[n].has(selected));
+    el.innerHTML = `<b>${label(selected)}</b><div>`
+      + f.map(n => `<span class="f">✅ ${esc(n)}</span>`).join('')
+      + b.map(n => `<span class="b">${esc(n)}</span>`).join('') + '</div>';
+  }
+
+  function renderBest(ppl, names) {
+    const total = names.length, el = $('#best');
+    if (!total) { el.innerHTML = '<span class="muted">Add your free days to get started.</span>'; return; }
+    const rows = [];
+    const start = new Date(); 
+    for (let i = 0; i < 365; i++) {
+      const dt = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const iso = isoOf(dt.getFullYear(), dt.getMonth(), dt.getDate());
+      const c = names.filter(n => ppl[n].has(iso)).length;
+      if (c > 0) rows.push({iso, c});
+    }
+    if (!rows.length) { el.innerHTML = '<span class="muted">Nobody has marked any free days yet.</span>'; return; }
+    const max = Math.max(...rows.map(r => r.c));
+    const top = rows.filter(r => r.c === max).slice(0, 10);
+    const everyoneFree = max === total && total >= 2;
+    $('#bestTitle').textContent = everyoneFree ? '⭐ Everyone is free on' : (total < 2 ? 'Your free dates' : `Best matches (${max} of ${total} free)`);
+    el.innerHTML = top.map(r => `<span class="chip ${everyoneFree ? 'best' : 'good'}" data-jump="${r.iso}"><b>${label(r.iso)}</b> ${r.c}/${total}</span>`).join('');
+  }
+
+  function renderPeople(ppl) {
+    const el = $('#people'), names = Object.keys(ppl);
+    if (!names.length) { el.innerHTML = '<span class="muted">Nobody yet.</span>'; return; }
+    el.innerHTML = names.map(n => {
+      const cnt = [...ppl[n]].filter(d => d >= TODAY).length;
+      const local = n in state.people, you = n === state.me;
+      return `<span class="chip"><b>${esc(n)}${you ? ' (you)' : ''}</b><span class="muted">${cnt} days</span>`
+        + (local && !you ? `<button data-rm="${esc(n)}" title="Remove">✕</button>` : '') + '</span>';
+    }).join('');
+  }
+
+  // ---------- editing ----------
+  function setDay(iso, on) {
+    if (!state.me) { toast('Enter your name first 👆'); $('#name').focus(); return false; }
+    if (iso < TODAY) return false;
+    const s = mine(); on ? s.add(iso) : s.delete(iso);
+    state.people[state.me] = [...s].sort();
+    return true;
+  }
+  const dayEl = e => e.target.closest('.day[data-iso]');
+
+  $('#grid').addEventListener('pointerdown', e => {
+    lastPointer = e.pointerType;
+    const el = dayEl(e); if (!el || mode !== 'edit' || e.pointerType !== 'mouse') return;
+    painting = !mine().has(el.dataset.iso);
+    if (setDay(el.dataset.iso, painting)) { save(); render(); } else painting = null;
+  });
+  $('#grid').addEventListener('pointerover', e => {
+    const el = dayEl(e); if (!el || painting === null) return;
+    if (setDay(el.dataset.iso, painting)) { save(); render(); }
+  });
+  document.addEventListener('pointerup', () => { painting = null; });
+  $('#grid').addEventListener('click', e => {
+    const el = dayEl(e); if (!el) return;
+    if (mode === 'group') { selected = el.dataset.iso; render(); return; }
+    if (lastPointer === 'mouse') return;       // already handled on pointerdown
+    if (setDay(el.dataset.iso, !mine().has(el.dataset.iso))) { save(); render(); }
+  });
+
+  // ---------- controls ----------
+  $('#tabEdit').onclick = () => { mode = 'edit'; render(); };
+  $('#tabGroup').onclick = () => { mode = 'group'; render(); };
+  $('#prev').onclick = () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } render(); };
+  $('#next').onclick = () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } render(); };
+
+  $('#saveName').onclick = () => {
+    const n = $('#name').value.trim().slice(0, 30);
+    if (!n) { toast('Type your name first'); return; }
+    if (n !== state.me && state.people[n]) { toast('That name is already in the group'); return; }
+    if (state.me && state.people[state.me]) { state.people[n] = state.people[state.me]; delete state.people[state.me]; }
+    state.me = n; if (!state.people[n]) state.people[n] = [];
+    save(); render(); toast(`Hi ${n}! Now tap the days you're free.`);
+  };
+  $('#name').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveName').click(); });
+
+  $('#weekends').onclick = () => {
+    if (!state.me) { toast('Enter your name first 👆'); return; }
+    const dim = new Date(view.y, view.m + 1, 0).getDate();
+    for (let d = 1; d <= dim; d++) { const dow = new Date(view.y, view.m, d).getDay(); if (dow === 0 || dow === 6) setDay(isoOf(view.y, view.m, d), true); }
+    save(); render();
+  };
+  $('#clearMonth').onclick = () => {
+    if (!state.me) return;
+    const prefix = isoOf(view.y, view.m, 1).slice(0, 7);
+    state.people[state.me] = (state.people[state.me] || []).filter(d => !d.startsWith(prefix));
+    save(); render();
+  };
+
+  $('#best').addEventListener('click', e => {
+    const el = e.target.closest('[data-jump]'); if (!el) return;
+    const [y, m] = el.dataset.jump.split('-').map(Number);
+    view = {y, m: m - 1}; selected = el.dataset.jump; mode = 'group'; render();
+    $('#grid').scrollIntoView({behavior: 'smooth', block: 'center'});
+  });
+  $('#people').addEventListener('click', e => {
+    const b = e.target.closest('[data-rm]'); if (!b) return;
+    const n = b.dataset.rm;
+    if (confirm(`Remove ${n} from this browser's calendar?`)) { delete state.people[n]; save(); render(); }
+  });
+
+  $('#share').onclick = async () => {
+    if (!state.me) { toast('Enter your name first 👆'); $('#name').focus(); return; }
+    const link = makeLink();
+    try { await navigator.clipboard.writeText(link); toast('Link copied! Send it to the group 🎉'); }
+    catch (e) { prompt('Copy this link and send it to the group:', link); }
+  };
+  $('#addPaste').onclick = () => {
+    const v = $('#paste').value.trim(); if (!v) return;
+    if (importFrom(v)) { $('#paste').value = ''; render(); }
+  };
+  $('#download').onclick = () => {
+    const out = {};
+    for (const [n, d] of Object.entries(everyone())) out[n] = [...d].filter(x => x >= TODAY).sort();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], {type: 'application/json'}));
+    a.download = 'data.json'; a.click();
+    toast('Upload this file to your repo to share it with everyone');
+  };
+
+  // ---------- startup ----------
+  async function init() {
+    try {
+      const r = await fetch('data.json', {cache: 'no-store'});
+      if (r.ok) { const j = await r.json(); for (const [n, d] of Object.entries(j)) if (Array.isArray(d)) repoPeople[n] = d; }
+    } catch (e) {}
+    if (location.hash.startsWith('#s=')) {
+      importFrom(location.hash);
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+    render();
+    if (!state.me) toast('Start by entering your name 👋');
+  }
+  init();
+})();
+</script>
+</body>
+</html>
