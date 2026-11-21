@@ -29,7 +29,7 @@
   .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
   .tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font-size:.9rem}
   .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-  .brushes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+  .brushes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
   .brushes button{padding:8px 2px;font-size:.72rem;border-width:2px;display:flex;flex-direction:column;align-items:center;gap:2px}
   .brushes button .ic{font-size:1.15rem;line-height:1}
   .brushes button.on{border-color:var(--accent);font-weight:700;background:color-mix(in srgb,var(--accent) 14%,var(--card))}
@@ -136,6 +136,7 @@
           <button data-brush="f"><span class="ic">✅</span>Free</button>
           <button data-brush="m"><span class="ic">❓</span>Not sure</button>
           <button data-brush="b"><span class="ic">❌</span>Busy</button>
+          <button data-brush="hang"><span class="ic">🎉</span>Hangout</button>
         </div>
       </div>
 
@@ -152,7 +153,7 @@
         <span><i style="background:var(--maybe)"></i>Not sure</span>
         <span><i style="background:var(--busy)"></i>Busy</span>
         <span><i style="background:var(--hang)"></i>Confirmed hangout 🎉</span>
-        <span>👆 Menu: tap a day and choose. Or pick a colour button to mark days with one tap. Days you don't mark count as free.</span>
+        <span>👆 Menu: tap a day and choose. Or pick a colour/Hangout button to mark days or plan a hangout with one tap. Days you don't mark count as free.</span>
       </div>
       <div class="legend hide" id="legendGroup">
         <span><i style="background:var(--free)"></i>Greener = more people free</span>
@@ -351,7 +352,7 @@
     const p = people[name]; if (!p) return null;
     return p.m.includes(iso) ? 'm' : p.b.includes(iso) ? 'b' : null;   // free = nothing marked
   };
-  const brushVal = () => (brush === 'f' || brush === 'menu') ? null : brush;   // "Free" simply removes any mark
+  const brushVal = () => (brush === 'f' || brush === 'menu' || brush === 'hang') ? null : brush;   // "Free" simply removes any mark
   // A day someone left unmarked counts as free for them.
   const isFree = (ix, n, iso) => !ix[n].m.has(iso) && !ix[n].b.has(iso);
 
@@ -589,6 +590,10 @@
         () => openHangForm(null, iso));
       return;
     }
+    if (brush === 'hang') {
+      openHangForm(null, iso);
+      return;
+    }
     if (setDay(iso, stat(me, iso) === brushVal() ? null : brushVal())) { persist(); render(); }
   });
 
@@ -683,11 +688,13 @@
       }
       persist(); render();
     };
-    if (brush === 'menu') openMenu($('#weekends'), 'All weekends this month', undefined, apply);
+    if (brush === 'menu' || brush === 'hang') openMenu($('#weekends'), 'All weekends this month', undefined, apply);
     else apply(brushVal());
   };
   $('#clearMonth').onclick = () => {
     if (!me || !people[me]) return;
+    const monthName = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+    if (!confirm(`Clear all your marks for ${monthName}? This can't be undone.`)) return;
     const prefix = isoOf(view.y, view.m, 1).slice(0, 7);
     for (const k of KINDS) people[me][k] = people[me][k].filter(d => !d.startsWith(prefix));
     persist(); render();
