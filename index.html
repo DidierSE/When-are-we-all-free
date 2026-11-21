@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#f6f7fb; --card:#ffffff; --text:#1c2033; --muted:#6b7190; --line:#e3e6f0;
-    --cell:#f1f3f9; --free:#22c55e; --maybe:#facc15; --busy:#f87171; --accent:#6366f1; --accent-text:#fff; --gold:#f59e0b; --danger:#ef4444;
+    --cell:#f1f3f9; --free:#22c55e; --maybe:#facc15; --busy:#f87171; --hang:#a855f7; --accent:#6366f1; --accent-text:#fff; --gold:#f59e0b; --danger:#ef4444;
   }
   @media (prefers-color-scheme: dark){
     :root{ --bg:#12141d; --card:#1b1e2b; --text:#eceefa; --muted:#9097b8; --line:#2c3042; --cell:#252938; --accent:#818cf8; --accent-text:#12141d; }
@@ -29,7 +29,7 @@
   .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
   .tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font-size:.9rem}
   .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-  .brushes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+  .brushes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
   .brushes button{padding:8px 2px;font-size:.72rem;border-width:2px;display:flex;flex-direction:column;align-items:center;gap:2px}
   .brushes button .ic{font-size:1.15rem;line-height:1}
   .brushes button.on{border-color:var(--accent);font-weight:700;background:color-mix(in srgb,var(--accent) 14%,var(--card))}
@@ -40,10 +40,12 @@
   .day{position:relative;aspect-ratio:1/1;min-height:44px;border-radius:10px;background:var(--cell);padding:6px 7px;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid transparent}
   .day.blank{background:transparent;cursor:default}
   .day.past{opacity:.38;cursor:not-allowed}
+  .day.hang{background:color-mix(in srgb,var(--hang) 42%,var(--cell))}
   .day.s-f{background:var(--free);color:#06260f}
   .day.s-m{background:var(--maybe);color:#2b2200}
   .day.s-b{background:var(--busy);color:#3a0707}
   .day.today{border-color:var(--accent)}
+  .day.hang{border-color:var(--hang)}
   .day.all{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
   .day.sel{outline:3px solid var(--accent);outline-offset:1px}
   .mark{position:absolute;bottom:3px;right:6px;font-size:.95rem;font-weight:800}
@@ -72,7 +74,6 @@
   .n.m{background:color-mix(in srgb,var(--maybe) 32%,var(--card))}
   .n.b{background:color-mix(in srgb,var(--busy) 30%,var(--card))}
   .n.x{background:var(--cell);color:var(--muted)}
-  .n.d{background:transparent;border:1px dashed var(--free)}
   .menu{position:fixed;z-index:50;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:6px;min-width:160px}
   .menu .t{font-size:.75rem;color:var(--muted);padding:4px 10px 6px}
   .menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:11px 12px;border-radius:8px}
@@ -133,7 +134,6 @@
           <button data-brush="f"><span class="ic">✅</span>Free</button>
           <button data-brush="m"><span class="ic">❓</span>Not sure</button>
           <button data-brush="b"><span class="ic">❌</span>Busy</button>
-          <button data-brush="x"><span class="ic">🧽</span>Clear</button>
         </div>
       </div>
 
@@ -146,18 +146,17 @@
       <div class="grid" id="grid" style="margin-top:6px"></div>
 
       <div class="legend" id="legendEdit">
-        <span><i style="background:var(--free)"></i>Free</span>
         <span><i style="background:var(--maybe)"></i>Not sure</span>
         <span><i style="background:var(--busy)"></i>Busy</span>
-        <span>🎉 confirmed hangout</span>
-        <span>👆 Menu: tap a day and choose. Or pick a colour button to mark days with one tap. Days you leave unmarked count as free.</span>
+        <span><i style="background:var(--hang)"></i>Confirmed hangout 🎉</span>
+        <span>👆 Menu: tap a day and choose. Or pick a colour button to mark days with one tap. Days you don't mark count as free.</span>
       </div>
       <div class="legend hide" id="legendGroup">
         <span><i style="background:var(--free)"></i>Greener = more people free</span>
         <span>⭐ everyone is free</span>
         <span>❓2 = two people not sure</span>
         <span>Unmarked days count as free</span>
-        <span>🎉 confirmed hangout</span>
+        <span><i style="background:var(--hang)"></i>Confirmed hangout 🎉</span>
       </div>
       <div class="row hide" id="quick" style="margin-top:12px">
         <button class="small" id="weekends">All weekends this month…</button>
@@ -298,7 +297,7 @@
       const p = people[me]; if (!p) return;
       const keep = k => p[k].filter(d => d >= TODAY).join(',');
       try {
-        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(me))), {method: 'PUT', body: JSON.stringify({n: me, f: keep('f'), m: keep('m'), b: keep('b')})});
+        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(me))), {method: 'PUT', body: JSON.stringify({n: me, f: '', m: keep('m'), b: keep('b')})});
         if (r.ok && v === ver) dirty = false;
         setStatus(r.ok);
       } catch (e) { setStatus(false); }
@@ -347,9 +346,9 @@
   }
   const stat = (name, iso) => {
     const p = people[name]; if (!p) return null;
-    return p.f.includes(iso) ? 'f' : p.m.includes(iso) ? 'm' : p.b.includes(iso) ? 'b' : null;
+    return p.m.includes(iso) ? 'm' : p.b.includes(iso) ? 'b' : null;   // free = nothing marked
   };
-  const brushVal = () => (brush === 'x' || brush === 'menu') ? null : brush;
+  const brushVal = () => (brush === 'f' || brush === 'menu') ? null : brush;   // "Free" simply removes any mark
   // A day someone left unmarked counts as free for them.
   const isFree = (ix, n, iso) => !ix[n].m.has(iso) && !ix[n].b.has(iso);
 
@@ -371,14 +370,14 @@
   function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
   function openMenu(anchor, title, current, onPick) {
     closeMenu();
-    const items = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy'], ['x', '🧽 Clear']];
+    const items = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
     const m = document.createElement('div');
     m.className = 'menu';
     m.innerHTML = `<div class="t">${esc(title)}</div>` + items.map(([k, t]) =>
-      `<button data-k="${k}" class="${(k === 'x' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('');
+      `<button data-k="${k}" class="${(k === 'f' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('');
     m.addEventListener('click', e => {
       const b = e.target.closest('button[data-k]'); if (!b) return;
-      const k = b.dataset.k; closeMenu(); onPick(k === 'x' ? null : k);
+      const k = b.dataset.k; closeMenu(); onPick(k === 'f' ? null : k);
     });
     document.body.appendChild(m);
     const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
@@ -423,25 +422,29 @@
       const cls = ['day'];
       if (past) cls.push('past');
       if (iso === TODAY) cls.push('today');
+      const hang = hdays.has(iso);
+      if (hang) cls.push('hang');
       let style = '', inner = '';
       if (mode === 'edit') {
         const s = stat(me, iso);
         if (s) { cls.push('s-' + s); inner = `<span class="mark">${ICON[s]}</span>`; }
-        if (hdays.has(iso)) inner += '<span class="hg">🎉</span>';
+        if (hang) inner += '<span class="hg">🎉</span>';
       } else {
         const f = names.filter(n => isFree(ix, n, iso)).length;
         const m = names.filter(n => ix[n].m.has(iso)).length;
+        const b = names.filter(n => ix[n].b.has(iso)).length;
         if (iso === selected) cls.push('sel');
-        if (f && total) {
+        if (f && total && !hang) {
           const pct = Math.round(f / total * 85);
           style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .6 ? 'color:#06260f' : ''}"`;
         }
         const all = total >= 2 && f === total && !past;
         if (all) cls.push('all');
-        if (hdays.has(iso)) inner += '<span class="hg">🎉</span>';
+        if (hang) inner += '<span class="hg">🎉</span>';
         else if (all) inner += '<span class="star">⭐</span>';
-        if (f || m) inner += `<span class="count">${f}/${total}</span>`;
-        if (m) inner += `<span class="qm">❓${m}</span>`;
+        if (f || m || hang) inner += `<span class="count">${hang && all ? '⭐' : ''}${f}/${total}</span>`;
+        const side = [m ? '❓' + m : '', hang && b ? '❌' + b : ''].filter(Boolean).join(' ');
+        if (side) inner += `<span class="qm">${side}</span>`;
       }
       html += `<div class="${cls.join(' ')}" data-iso="${iso}" ${style}>${d}${inner}</div>`;
     }
@@ -466,11 +469,7 @@
     renderPeople(ix, names);
   }
 
-  // A name chip; dashed when the person didn't mark the day (counted as free).
-  const chipOf = (ix, n, k, iso) => {
-    const assumed = k === 'f' && !ix[n].f.has(iso);
-    return `<span class="n ${k}${assumed ? ' d' : ''}"${assumed ? ' title="Did not mark this day, counted as free"' : ''}>${esc(n)}</span>`;
-  };
+  const chipOf = (ix, n, k, iso) => `<span class="n ${k}">${esc(n)}</span>`;
   function whoFree(ix, names, iso) {
     const groups = {f: names.filter(n => isFree(ix, n, iso)), m: names.filter(n => ix[n].m.has(iso)), b: names.filter(n => ix[n].b.has(iso))};
     const parts = [];
@@ -487,13 +486,10 @@
     if (!selected) { el.innerHTML = '<span class="muted">Tap a day to see who is free.</span>'; return; }
     const groups = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
     let html = `<b>${label(selected)}</b>`;
-    let assumed = false;
     for (const [k, title] of groups) {
       const list = k === 'f' ? names.filter(n => isFree(ix, n, selected)) : names.filter(n => ix[n][k].has(selected));
-      if (k === 'f' && list.some(n => !ix[n].f.has(selected))) assumed = true;
       if (list.length) html += `<div class="g">${title}: ${list.map(n => chipOf(ix, n, k, selected)).join('')}</div>`;
     }
-    if (assumed) html += '<div class="g muted">Dashed = didn\'t mark this day, counted as free.</div>';
     const here = Object.values(hangouts).filter(h => h.date === selected);
     for (const h of here) html += `<div class="g">🎉 <b>${esc(h.title)}</b> is planned this day</div>`;
     if (selected >= TODAY) html += `<div class="plan"><button class="small" data-plan="${selected}">🎉 Plan a hangout on this day</button></div>`;
@@ -563,7 +559,715 @@
     const el = $('#people');
     if (!names.length) { el.innerHTML = '<span class="muted">Nobody yet.</span>'; return; }
     el.innerHTML = names.map(n => {
-      const cnt = [...ix[n].f, ...ix[n].m, ...ix[n].b].filter(d => d >= TODAY).length;
+      const cnt = [...ix[n].m, ...ix[n].b].filter(d => d >= TODAY).length;
+      return `<span class="chip"><b>${esc(n)}${n === me ? ' (you)' : ''}</b><span class="muted">${cnt} days marked</span>`
+        + `<button data-rm="${esc(n)}" title="Remove">✕</button></span>`;
+    }).join('');
+  }
+
+  // ---------- tapping a day ----------
+  $('#grid').addEventListener('click', e => {
+    const el = e.target.closest('.day[data-iso]'); if (!el) return;
+    const iso = el.dataset.iso;
+    if (mode === 'group') { selected = iso; render(); return; }
+    if (iso < TODAY || !canEdit()) return;
+    if (brush === 'menu') {
+      openMenu(el, label(iso), stat(me, iso), s => { if (setDay(iso, s)) { persist(); render(); } });
+      return;
+    }
+    if (setDay(iso, stat(me, iso) === brushVal() ? null : brushVal())) { persist(); render(); }
+  });
+
+  // ---------- hangouts ----------
+  function openHangForm(h, date) {
+    if (!canEdit()) return;
+    editingId = h ? h.id : null;
+    $('#hfTitle').textContent = h ? 'Edit hangout' : 'New hangout';
+    $('#hfWhat').value = h ? h.title : '';
+    $('#hfDate').value = h ? h.date : (date || '');
+    $('#hfTime').value = h ? h.time : '';
+    $('#hfWhere').value = h ? h.place : '';
+    $('#hfNotes').value = h ? h.notes : '';
+    formOpen = true; mode = 'hangouts'; render();
+    $('#hangForm').scrollIntoView({behavior: 'smooth', block: 'center'});
+    $('#hfWhat').focus();
+  }
+  $('#newHang').onclick = () => openHangForm(null, selected && selected >= TODAY ? selected : '');
+  $('#hfCancel').onclick = () => { formOpen = false; editingId = null; render(); };
+  $('#hfSave').onclick = () => {
+    if (!canEdit()) return;
+    const title = $('#hfWhat').value.trim(), date = $('#hfDate').value;
+    if (!title) { toast('Write what the hangout is 👆'); $('#hfWhat').focus(); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast('Pick a date'); return; }
+    const f = {title, date, time: $('#hfTime').value, place: $('#hfWhere').value.trim(), notes: $('#hfNotes').value.trim()};
+    const t = Date.now();
+    let h, msg;
+    if (editingId && hangouts[editingId]) {
+      const old = hangouts[editingId];
+      if (['title', 'date', 'time', 'place', 'notes'].every(k => old[k] === f[k])) { formOpen = false; editingId = null; render(); toast('No changes made'); return; }
+      h = {...old, ...f, editedBy: me, editedAt: t}; msg = 'Hangout updated ✏️';
+    } else {
+      h = {id: t.toString(36) + Math.random().toString(36).slice(2, 6), ...f, by: me, at: t, editedBy: '', editedAt: 0}; msg = 'Hangout added 🎉';
+    }
+    hangouts[h.id] = h; hangPut(h);
+    formOpen = false; editingId = null; render(); toast(msg);
+  };
+  $('#hangList').addEventListener('click', e => {
+    const ed = e.target.closest('[data-hedit]');
+    if (ed) { const h = hangouts[ed.dataset.hedit]; if (h) openHangForm(h); return; }
+    const del = e.target.closest('[data-hdel]');
+    if (del) {
+      const h = hangouts[del.dataset.hdel]; if (!h || !canEdit()) return;
+      if (confirm(`Delete "${h.title}" for everyone?`)) { hangDel(h.id); render(); toast('Hangout deleted'); }
+    }
+  });
+  $('#detail').addEventListener('click', e => {
+    const b = e.target.closest('[data-plan]'); if (b) openHangForm(null, b.dataset.plan);
+  });
+
+  // ---------- controls ----------
+  $('#tabEdit').onclick = () => { mode = 'edit'; closeMenu(); render(); };
+  $('#tabGroup').onclick = () => { mode = 'group'; closeMenu(); render(); };
+  $('#tabHang').onclick = () => { mode = 'hangouts'; closeMenu(); render(); };
+  $('#prev').onclick = () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } render(); };
+  $('#next').onclick = () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } render(); };
+  $('#brushes').addEventListener('click', e => {
+    const b = e.target.closest('button[data-brush]'); if (!b) return;
+    brush = b.dataset.brush; render();
+  });
+
+  $('#nameSel').addEventListener('change', e => {
+    const v = e.target.value;
+    if (v === '__new') { newMode = true; nameSig = ''; render(); $('#name').focus(); return; }
+    newMode = false; me = v; saveLocal(); render();
+    toast(`Hi ${me}! Tap a day to mark it.`);
+  });
+  $('#saveName').onclick = () => {
+    const raw = $('#name').value.trim().slice(0, 30);
+    if (!raw) { toast('Type your name first'); return; }
+    if (CLOUD && !loaded) { toast('Still connecting, try again in a second'); return; }
+    const existing = Object.keys(people).find(n => n.toLowerCase() === raw.toLowerCase());
+    let created = false;
+    if (existing) { me = existing; toast(`${existing} is already in the group, so you're signed in as ${existing}.`); }
+    else { people[raw] = empty(); me = raw; created = true; toast(`Hi ${me}! Tap a day to mark it.`); }
+    newMode = false; nameSig = ''; $('#name').value = '';
+    saveLocal(); if (created) cloudPush();
+    render();
+  };
+  $('#name').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveName').click(); });
+
+  $('#weekends').onclick = () => {
+    if (!canEdit()) return;
+    const apply = s => {
+      const dim = new Date(view.y, view.m + 1, 0).getDate();
+      for (let d = 1; d <= dim; d++) {
+        const dow = new Date(view.y, view.m, d).getDay();
+        if (dow === 0 || dow === 6) setDay(isoOf(view.y, view.m, d), s);
+      }
+      persist(); render();
+    };
+    if (brush === 'menu') openMenu($('#weekends'), 'All weekends this month', undefined, apply);
+    else apply(brushVal());
+  };
+  $('#clearMonth').onclick = () => {
+    if (!me || !people[me]) return;
+    const prefix = isoOf(view.y, view.m, 1).slice(0, 7);
+    for (const k of KINDS) people[me][k] = people[me][k].filter(d => !d.startsWith(prefix));
+    persist(); render();
+  };
+
+  $('#best').addEventListener('click', e => {
+    const el = e.target.closest('[data-jump]'); if (!el) return;
+    const [y, m] = el.dataset.jump.split('-').map(Number);
+    view = {y, m: m - 1}; selected = el.dataset.jump; mode = 'group'; render();
+    $('#grid').scrollIntoView({behavior: 'smooth', block: 'center'});
+  });
+  $('#people').addEventListener('click', e => {
+    const b = e.target.closest('[data-rm]'); if (!b) return;
+    const n = b.dataset.rm;
+    if (!confirm(`Remove ${n} from the group? Their days will be deleted for everyone.`)) return;
+    delete people[n]; cloudDelete(n);
+    if (n === me) me = '';
+    saveLocal(); render();
+  });
+
+  // ---------- startup ----------
+  if (CLOUD && !ROOM) {
+    document.querySelector('.wrap').innerHTML = '<h1>🔒 Private calendar</h1><div class="card"><p>This calendar only opens with the private link your friend sent you.</p><p class="muted">Open that full link (it ends with <b>?room=</b> and a code) once, and this device will remember it.</p></div>';
+    return;
+  }
+  const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  $('#dows').innerHTML = dows.map(d => `<div class="dow">${d}</div>`).join('');
+  setStatus(CLOUD ? true : null);
+  if (CLOUD) { $('#status').textContent = 'Connecting...'; cloudStart(); }
+  render();
+  if (!me) toast('Start by picking your name 👋');
+})();
+</script>
+</body>
+</html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When Are We Free?</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --text:#1c2033; --muted:#6b7190; --line:#e3e6f0;
+    --cell:#f1f3f9; --free:#22c55e; --maybe:#facc15; --busy:#f87171; --hang:#a855f7; --accent:#6366f1; --accent-text:#fff; --gold:#f59e0b; --danger:#ef4444;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#12141d; --card:#1b1e2b; --text:#eceefa; --muted:#9097b8; --line:#2c3042; --cell:#252938; --accent:#818cf8; --accent-text:#12141d; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:900px;margin:0 auto;padding:16px}
+  h1{font-size:1.5rem;margin:8px 0 2px}
+  .sub{color:var(--muted);margin:0 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  input[type=text],input[type=date],input[type=time],select,textarea{flex:1;min-width:150px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+  textarea{resize:vertical}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 14px;border-radius:10px}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
+  button.small{padding:5px 10px;font-size:.85rem}
+  .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
+  .tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font-size:.9rem}
+  .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .brushes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+  .brushes button{padding:8px 2px;font-size:.72rem;border-width:2px;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .brushes button .ic{font-size:1.15rem;line-height:1}
+  .brushes button.on{border-color:var(--accent);font-weight:700;background:color-mix(in srgb,var(--accent) 14%,var(--card))}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .nav h2{margin:0;font-size:1.15rem}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;-webkit-user-select:none}
+  .dow{text-align:center;color:var(--muted);font-size:.8rem;font-weight:600;padding:2px 0}
+  .day{position:relative;aspect-ratio:1/1;min-height:44px;border-radius:10px;background:var(--cell);padding:6px 7px;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid transparent}
+  .day.blank{background:transparent;cursor:default}
+  .day.past{opacity:.38;cursor:not-allowed}
+  .day.hang{background:color-mix(in srgb,var(--hang) 42%,var(--cell))}
+  .day.s-f{background:var(--free);color:#06260f}
+  .day.s-m{background:var(--maybe);color:#2b2200}
+  .day.s-b{background:var(--busy);color:#3a0707}
+  .day.today{border-color:var(--accent)}
+  .day.hang{border-color:var(--hang)}
+  .day.all{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
+  .day.sel{outline:3px solid var(--accent);outline-offset:1px}
+  .mark{position:absolute;bottom:3px;right:6px;font-size:.95rem;font-weight:800}
+  .count{position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:700;opacity:.85}
+  .qm{position:absolute;bottom:4px;left:6px;font-size:.65rem;font-weight:700}
+  .star,.hg{position:absolute;top:3px;right:5px;font-size:.8rem}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;margin-top:10px}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:var(--cell);border-radius:999px;padding:6px 12px;font-size:.9rem;display:inline-flex;gap:8px;align-items:center}
+  .chip b{font-weight:600}
+  .chip.best{background:color-mix(in srgb,var(--gold) 25%,var(--card));cursor:pointer}
+  .chip.good{cursor:pointer}
+  .chip button{border:0;background:none;padding:0 2px;color:var(--muted)}
+  .chip button:hover{color:var(--danger)}
+  h3{margin:0 0 10px;font-size:1rem}
+  .lbl{font-weight:600;font-size:.9rem;margin:0 0 6px}
+  .blk{margin-bottom:14px}
+  .blk:last-child{margin-bottom:0}
+  .muted{color:var(--muted);font-size:.9rem}
+  .detail{margin-top:12px}
+  .detail .g{margin-top:6px}
+  .detail .plan{margin-top:10px}
+  span.n{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:999px;font-size:.85rem}
+  .n.f{background:color-mix(in srgb,var(--free) 28%,var(--card))}
+  .n.m{background:color-mix(in srgb,var(--maybe) 32%,var(--card))}
+  .n.b{background:color-mix(in srgb,var(--busy) 30%,var(--card))}
+  .n.x{background:var(--cell);color:var(--muted)}
+  .menu{position:fixed;z-index:50;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:6px;min-width:160px}
+  .menu .t{font-size:.75rem;color:var(--muted);padding:4px 10px 6px}
+  .menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:11px 12px;border-radius:8px}
+  .menu button:hover,.menu button.cur{background:var(--cell)}
+  .menu button.cur{font-weight:700}
+  /* hangouts */
+  .hform{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;background:var(--bg)}
+  .hform label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:10px}
+  .hform label input,.hform label textarea{display:block;width:100%;min-width:0;margin-top:4px;background:var(--card)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .hcard{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .hcard.past{opacity:.7}
+  .hhead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
+  .hdate{font-weight:600;color:var(--accent)}
+  .rel{font-weight:500;color:var(--muted);font-size:.85rem;margin-left:4px}
+  .hbtns{display:flex;gap:6px}
+  .htitle{font-size:1.1rem;font-weight:700;margin:6px 0 2px}
+  .hmeta{margin:2px 0}
+  .hnotes{white-space:pre-wrap;margin:8px 0;background:var(--cell);border-radius:10px;padding:10px 12px}
+  .hwho{margin-top:8px;font-size:.85rem;color:var(--muted)}
+  .hauthor{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:.8rem;color:var(--muted);line-height:1.6}
+  details.pastbox{margin-top:8px}
+  details.pastbox summary{cursor:pointer;color:var(--muted);margin-bottom:10px}
+  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:60}
+  #toast.show{opacity:1}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📅 When are we all free?</h1>
+  <p class="sub">Mark your days. Everyone sees the updates live and the app finds the days that work for all of us.</p>
+
+  <div class="card">
+    <div class="stack">
+      <div class="row" id="pickRow">
+        <select id="nameSel" aria-label="Who are you?"></select>
+      </div>
+      <div class="row hide" id="newRow">
+        <input type="text" id="name" placeholder="Type your name" maxlength="30" autocomplete="off">
+        <button class="primary" id="saveName">Save name</button>
+      </div>
+    </div>
+    <p class="muted" id="status" style="margin:8px 0 0"></p>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button id="tabEdit" class="on">✏️ My days</button>
+      <button id="tabGroup">👥 Group view</button>
+      <button id="tabHang">🎉 Hangouts</button>
+    </div>
+
+    <div id="calView">
+      <div id="brushWrap">
+        <div class="brushes" id="brushes">
+          <button data-brush="menu" class="on"><span class="ic">👆</span>Menu</button>
+          <button data-brush="f"><span class="ic">✅</span>Free</button>
+          <button data-brush="m"><span class="ic">❓</span>Not sure</button>
+          <button data-brush="b"><span class="ic">❌</span>Busy</button>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button id="prev" aria-label="Previous month">‹</button>
+        <h2 id="monthLabel"></h2>
+        <button id="next" aria-label="Next month">›</button>
+      </div>
+      <div class="grid" id="dows"></div>
+      <div class="grid" id="grid" style="margin-top:6px"></div>
+
+      <div class="legend" id="legendEdit">
+        <span><i style="background:var(--maybe)"></i>Not sure</span>
+        <span><i style="background:var(--busy)"></i>Busy</span>
+        <span><i style="background:var(--hang)"></i>Confirmed hangout 🎉</span>
+        <span>👆 Menu: tap a day and choose. Or pick a colour button to mark days with one tap. Days you don't mark count as free.</span>
+      </div>
+      <div class="legend hide" id="legendGroup">
+        <span><i style="background:var(--free)"></i>Greener = more people free</span>
+        <span>⭐ everyone is free</span>
+        <span>❓2 = two people not sure</span>
+        <span>Unmarked days count as free</span>
+        <span><i style="background:var(--hang)"></i>Confirmed hangout 🎉</span>
+      </div>
+      <div class="row hide" id="quick" style="margin-top:12px">
+        <button class="small" id="weekends">All weekends this month…</button>
+        <button class="small" id="clearMonth">Clear this month</button>
+      </div>
+      <div id="detail" class="detail hide"></div>
+    </div>
+
+    <div id="hangView" class="hide">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <b>Confirmed hangouts</b>
+        <button class="primary small" id="newHang">➕ New hangout</button>
+      </div>
+      <div id="hangForm" class="hform hide">
+        <h3 id="hfTitle">New hangout</h3>
+        <label>What are we doing?
+          <input type="text" id="hfWhat" maxlength="80" placeholder="e.g. Dinner and cards">
+        </label>
+        <div class="row2">
+          <label>Date <input type="date" id="hfDate"></label>
+          <label>Time (optional) <input type="time" id="hfTime"></label>
+        </div>
+        <label>Where (optional)
+          <input type="text" id="hfWhere" maxlength="80" placeholder="e.g. Didier's place">
+        </label>
+        <label>Notes
+          <textarea id="hfNotes" rows="4" maxlength="1000" placeholder="Who's booking, what to bring, the plan..."></textarea>
+        </label>
+        <div class="row">
+          <button class="primary" id="hfSave">Save hangout</button>
+          <button id="hfCancel">Cancel</button>
+        </div>
+      </div>
+      <div id="hangList"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Best dates</h3>
+    <div id="best"></div>
+  </div>
+
+  <div class="card">
+    <h3>The group</h3>
+    <div class="chips" id="people"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+(() => {
+  // ====== LIVE SYNC SETUP: paste your Firebase Realtime Database URL between the quotes ======
+  // Example: 'https://my-friends-default-rtdb.europe-west1.firebasedatabase.app'
+  const FIREBASE_URL = 'https://when-are-we-all-free-2918a-default-rtdb.europe-west1.firebasedatabase.app/';
+  // The calendar's secret code comes from the link (...?room=SECRET), never from this file, so a stranger
+  // who finds the site sees nothing. Only people you send the full link to can open the calendar.
+  let ROOM = '';
+  try {
+    const q = new URLSearchParams(location.search).get('room');
+    if (q) localStorage.setItem('whenfree.room', q);          // remember it on this device
+    ROOM = q || localStorage.getItem('whenfree.room') || '';
+  } catch (e) { ROOM = new URLSearchParams(location.search).get('room') || ''; }
+  // ==========================================================================================
+
+  const CLOUD = !!FIREBASE_URL;
+  const KEY = 'whenfree.v2';
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const isoOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+  const now = new Date();
+  const TODAY = isoOf(now.getFullYear(), now.getMonth(), now.getDate());
+  const label = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+  const fmt = ms => new Date(ms).toLocaleString('en-GB', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+  const empty = () => ({f: [], m: [], b: []});
+  const KINDS = ['f', 'm', 'b'];
+  const ICON = {f: '✓', m: '?', b: '✕'};
+
+  // ---------- state ----------
+  let me = '';              // the name picked on this device
+  let people = {};          // name -> {f: free days, m: not sure days, b: busy days}
+  let hangouts = {};        // id -> {id, title, date, time, place, notes, by, at, editedBy, editedAt}
+  let pendingH = {};        // hangout changes not yet confirmed by the database (id -> hangout, or null = deleted)
+  let loaded = !CLOUD;      // true once the shared calendar has been read
+  let dirty = false, pushT = null, ver = 0;
+  let mode = 'edit', brush = 'menu', selected = null, newMode = false, nameSig = '';
+  let formOpen = false, editingId = null;
+  let view = {y: now.getFullYear(), m: now.getMonth()};
+
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s) { me = s.me || ''; if (!CLOUD) { people = s.people || {}; hangouts = s.hangouts || {}; } }
+    else { const o = JSON.parse(localStorage.getItem('whenfree.v1') || 'null'); if (o && o.me) me = o.me; }
+  } catch (e) {}
+  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify({me, people: CLOUD ? {} : people, hangouts: CLOUD ? {} : hangouts})); } catch (e) {} };
+
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // ---------- shared database (Firebase Realtime Database over plain HTTPS) ----------
+  const cKey = n => n.replace(/[.$#\[\]\/]/g, '_');
+  const cUrl = p => FIREBASE_URL.replace(/\/$/, '') + '/rooms/' + encodeURIComponent(ROOM) + p + '.json';
+  const parse = s => s ? String(s).split(',').filter(Boolean) : [];
+
+  function setStatus(ok) {
+    const el = $('#status');
+    el.textContent = !CLOUD ? '⚠️ Live sync is not set up yet (see README), so changes stay on this device.'
+      : ok ? '🟢 Live: everyone\'s changes show up automatically.'
+      : '🔴 Can\'t reach the shared calendar right now. Retrying...';
+  }
+  async function cloudPull() {
+    try {
+      const r = await fetch(cUrl(''), {cache: 'no-store'});
+      if (!r.ok) throw 0;
+      const root = (await r.json()) || {};
+      const out = {};
+      for (const v of Object.values(root.people || {})) {
+        if (v && v.n) out[v.n] = {f: parse(v.f !== undefined ? v.f : v.d), m: parse(v.m), b: parse(v.b)};
+      }
+      const hout = {};
+      for (const v of Object.values(root.hangouts || {})) {
+        if (v && v.id && v.date) hout[v.id] = {id: v.id, title: v.title || '', date: v.date, time: v.time || '', place: v.place || '',
+          notes: v.notes || '', by: v.by || '', at: +v.at || 0, editedBy: v.editedBy || '', editedAt: +v.editedAt || 0};
+      }
+      for (const [id, h] of Object.entries(pendingH)) { if (h) hout[id] = h; else delete hout[id]; }   // keep my unsent changes
+      if (dirty && me && people[me]) out[me] = people[me];   // don't overwrite my edits that are still being sent
+      if (me && !out[me]) { me = ''; saveLocal(); }          // my name was removed from the group
+      people = out; hangouts = hout; loaded = true; setStatus(true); render();
+    } catch (e) { setStatus(false); }
+  }
+  function cloudPush() {
+    if (!CLOUD || !me || !people[me]) return;
+    dirty = true; clearTimeout(pushT);
+    const v = ++ver;
+    pushT = setTimeout(async () => {
+      const p = people[me]; if (!p) return;
+      const keep = k => p[k].filter(d => d >= TODAY).join(',');
+      try {
+        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(me))), {method: 'PUT', body: JSON.stringify({n: me, f: '', m: keep('m'), b: keep('b')})});
+        if (r.ok && v === ver) dirty = false;
+        setStatus(r.ok);
+      } catch (e) { setStatus(false); }
+    }, 400);
+  }
+  function cloudDelete(name) {
+    if (CLOUD) fetch(cUrl('/people/' + encodeURIComponent(cKey(name))), {method: 'DELETE'}).catch(() => {});
+  }
+  async function hangPut(h) {
+    if (!CLOUD) { saveLocal(); return; }
+    pendingH[h.id] = h;
+    try {
+      const r = await fetch(cUrl('/hangouts/' + h.id), {method: 'PUT', body: JSON.stringify(h)});
+      if (r.ok && pendingH[h.id] === h) delete pendingH[h.id];
+      setStatus(r.ok);
+    } catch (e) { setStatus(false); }
+  }
+  async function hangDel(id) {
+    delete hangouts[id];
+    if (!CLOUD) { saveLocal(); return; }
+    pendingH[id] = null;
+    try {
+      const r = await fetch(cUrl('/hangouts/' + id), {method: 'DELETE'});
+      if (r.ok && pendingH[id] === null) delete pendingH[id];
+      setStatus(r.ok);
+    } catch (e) { setStatus(false); }
+  }
+  function retryPending() { for (const [id, h] of Object.entries(pendingH)) { if (h) hangPut(h); else hangDel(id); } }
+  function cloudStart() {
+    cloudPull();
+    try {
+      const es = new EventSource(cUrl(''));
+      es.addEventListener('put', cloudPull);
+      es.addEventListener('patch', cloudPull);
+    } catch (e) {}
+    setInterval(cloudPull, 20000);
+    setInterval(retryPending, 20000);
+  }
+  const persist = () => { saveLocal(); cloudPush(); };
+
+  // ---------- helpers ----------
+  function index() {
+    const out = {};
+    for (const [n, p] of Object.entries(people)) out[n] = {f: new Set(p.f), m: new Set(p.m), b: new Set(p.b)};
+    return out;
+  }
+  const stat = (name, iso) => {
+    const p = people[name]; if (!p) return null;
+    return p.m.includes(iso) ? 'm' : p.b.includes(iso) ? 'b' : null;   // free = nothing marked
+  };
+  const brushVal = () => (brush === 'f' || brush === 'menu') ? null : brush;   // "Free" simply removes any mark
+  // A day someone left unmarked counts as free for them.
+  const isFree = (ix, n, iso) => !ix[n].m.has(iso) && !ix[n].b.has(iso);
+
+  function canEdit() {
+    if (!me) { toast('Pick your name first 👆'); return false; }
+    if (!loaded) { toast('Still connecting, try again in a second'); return false; }
+    return true;
+  }
+  function setDay(iso, s) {
+    if (iso < TODAY || !canEdit()) return false;
+    const p = people[me] || (people[me] = empty());
+    for (const k of KINDS) p[k] = p[k].filter(d => d !== iso);
+    if (s) p[s].push(iso);
+    return true;
+  }
+
+  // ---------- pop-up menu (Free / Not sure / Busy / Clear) ----------
+  let menuEl = null;
+  function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
+  function openMenu(anchor, title, current, onPick) {
+    closeMenu();
+    const items = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
+    const m = document.createElement('div');
+    m.className = 'menu';
+    m.innerHTML = `<div class="t">${esc(title)}</div>` + items.map(([k, t]) =>
+      `<button data-k="${k}" class="${(k === 'f' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('');
+    m.addEventListener('click', e => {
+      const b = e.target.closest('button[data-k]'); if (!b) return;
+      const k = b.dataset.k; closeMenu(); onPick(k === 'f' ? null : k);
+    });
+    document.body.appendChild(m);
+    const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+    const left = Math.min(Math.max(8, r.left), Math.max(8, window.innerWidth - w - 8));
+    let top = r.bottom + 6;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
+    m.style.left = left + 'px'; m.style.top = top + 'px';
+    menuEl = m;
+  }
+  document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  window.addEventListener('scroll', closeMenu, {passive: true});
+  window.addEventListener('resize', closeMenu);
+
+  // ---------- rendering ----------
+  function renderNameUI(names) {
+    const showNew = newMode || names.length === 0;
+    $('#pickRow').classList.toggle('hide', names.length === 0);
+    $('#newRow').classList.toggle('hide', !showNew);
+    const sig = names.join('|') + '#' + me + '#' + showNew;
+    if (sig === nameSig) return;                 // don't rebuild (and close) the dropdown for no reason
+    nameSig = sig;
+    $('#nameSel').innerHTML =
+      `<option value="" disabled ${!me && !showNew ? 'selected' : ''}>Who are you? Pick your name</option>`
+      + names.map(n => `<option value="${esc(n)}" ${n === me && !showNew ? 'selected' : ''}>${esc(n)}</option>`).join('')
+      + `<option value="__new" ${showNew ? 'selected' : ''}>➕ I'm not on the list</option>`;
+  }
+
+  function render() {
+    const ix = index(), names = Object.keys(ix).sort((a, b) => a.localeCompare(b)), total = names.length;
+    const hdays = new Set(Object.values(hangouts).map(h => h.date));
+    $('#monthLabel').textContent = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+
+    const first = new Date(view.y, view.m, 1);
+    const lead = (first.getDay() + 6) % 7;
+    const dim = new Date(view.y, view.m + 1, 0).getDate();
+    let html = '';
+    for (let i = 0; i < lead; i++) html += '<div class="day blank"></div>';
+    for (let d = 1; d <= dim; d++) {
+      const iso = isoOf(view.y, view.m, d);
+      const past = iso < TODAY;
+      const cls = ['day'];
+      if (past) cls.push('past');
+      if (iso === TODAY) cls.push('today');
+      const hang = hdays.has(iso);
+      if (hang) cls.push('hang');
+      let style = '', inner = '';
+      if (mode === 'edit') {
+        const s = stat(me, iso);
+        if (s) { cls.push('s-' + s); inner = `<span class="mark">${ICON[s]}</span>`; }
+        if (hang) inner += '<span class="hg">🎉</span>';
+      } else {
+        const f = names.filter(n => isFree(ix, n, iso)).length;
+        const m = names.filter(n => ix[n].m.has(iso)).length;
+        const b = names.filter(n => ix[n].b.has(iso)).length;
+        if (iso === selected) cls.push('sel');
+        if (f && total && !hang) {
+          const pct = Math.round(f / total * 85);
+          style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .6 ? 'color:#06260f' : ''}"`;
+        }
+        const all = total >= 2 && f === total && !past;
+        if (all) cls.push('all');
+        if (hang) inner += '<span class="hg">🎉</span>';
+        else if (all) inner += '<span class="star">⭐</span>';
+        if (f || m || hang) inner += `<span class="count">${hang && all ? '⭐' : ''}${f}/${total}</span>`;
+        const side = [m ? '❓' + m : '', hang && b ? '❌' + b : ''].filter(Boolean).join(' ');
+        if (side) inner += `<span class="qm">${side}</span>`;
+      }
+      html += `<div class="${cls.join(' ')}" data-iso="${iso}" ${style}>${d}${inner}</div>`;
+    }
+    $('#grid').innerHTML = html;
+
+    const cal = mode !== 'hangouts';
+    $('#calView').classList.toggle('hide', !cal);
+    $('#hangView').classList.toggle('hide', cal);
+    $('#tabEdit').classList.toggle('on', mode === 'edit');
+    $('#tabGroup').classList.toggle('on', mode === 'group');
+    $('#tabHang').classList.toggle('on', mode === 'hangouts');
+    $('#brushWrap').classList.toggle('hide', mode !== 'edit');
+    $('#legendEdit').classList.toggle('hide', mode !== 'edit');
+    $('#legendGroup').classList.toggle('hide', mode !== 'group');
+    $('#quick').classList.toggle('hide', mode !== 'edit');
+    $('#hangForm').classList.toggle('hide', !formOpen);
+    document.querySelectorAll('#brushes button').forEach(b => b.classList.toggle('on', b.dataset.brush === brush));
+    renderNameUI(names);
+    renderDetail(ix, names);
+    renderHangouts(ix, names);
+    renderBest(ix, names);
+    renderPeople(ix, names);
+  }
+
+  const chipOf = (ix, n, k, iso) => `<span class="n ${k}">${esc(n)}</span>`;
+  function whoFree(ix, names, iso) {
+    const groups = {f: names.filter(n => isFree(ix, n, iso)), m: names.filter(n => ix[n].m.has(iso)), b: names.filter(n => ix[n].b.has(iso))};
+    const parts = [];
+    for (const [k, t] of [['f', '✅'], ['m', '❓'], ['b', '❌']]) {
+      if (groups[k].length) parts.push(`${t} ${groups[k].map(n => chipOf(ix, n, k, iso)).join('')}`);
+    }
+    return parts.join(' ');
+  }
+
+  function renderDetail(ix, names) {
+    const el = $('#detail');
+    if (mode !== 'group') { el.classList.add('hide'); return; }
+    el.classList.remove('hide');
+    if (!selected) { el.innerHTML = '<span class="muted">Tap a day to see who is free.</span>'; return; }
+    const groups = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
+    let html = `<b>${label(selected)}</b>`;
+    for (const [k, title] of groups) {
+      const list = k === 'f' ? names.filter(n => isFree(ix, n, selected)) : names.filter(n => ix[n][k].has(selected));
+      if (list.length) html += `<div class="g">${title}: ${list.map(n => chipOf(ix, n, k, selected)).join('')}</div>`;
+    }
+    const here = Object.values(hangouts).filter(h => h.date === selected);
+    for (const h of here) html += `<div class="g">🎉 <b>${esc(h.title)}</b> is planned this day</div>`;
+    if (selected >= TODAY) html += `<div class="plan"><button class="small" data-plan="${selected}">🎉 Plan a hangout on this day</button></div>`;
+    el.innerHTML = html;
+  }
+
+  function renderHangouts(ix, names) {
+    const el = $('#hangList');
+    const list = Object.values(hangouts);
+    const key = h => h.date + ' ' + (h.time || '');
+    const up = list.filter(h => h.date >= TODAY).sort((a, b) => key(a) < key(b) ? -1 : 1);
+    const past = list.filter(h => h.date < TODAY).sort((a, b) => key(a) < key(b) ? 1 : -1);
+    const rel = iso => {
+      const n = Math.round((new Date(iso + 'T00:00:00') - new Date(TODAY + 'T00:00:00')) / 864e5);
+      return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n > 1 ? `in ${n} days` : '';
+    };
+    const card = (h, isPast) => `<div class="hcard ${isPast ? 'past' : ''}">
+        <div class="hhead">
+          <div class="hdate">📅 ${label(h.date)}${h.time ? ' · ' + esc(h.time) : ''}${isPast ? '' : `<span class="rel">${rel(h.date)}</span>`}</div>
+          <div class="hbtns"><button class="small" data-hedit="${esc(h.id)}">✏️ Edit</button><button class="small" data-hdel="${esc(h.id)}">🗑 Delete</button></div>
+        </div>
+        <div class="htitle">${esc(h.title)}</div>
+        ${h.place ? `<div class="hmeta">📍 ${esc(h.place)}</div>` : ''}
+        ${h.notes ? `<div class="hnotes">${esc(h.notes)}</div>` : ''}
+        ${isPast ? '' : `<div class="hwho">Availability that day: ${whoFree(ix, names, h.date) || 'nobody has answered yet'}</div>`}
+        <div class="hauthor">✍️ Written by <b>${esc(h.by || 'someone')}</b>${h.at ? ' · ' + fmt(h.at) : ''}`
+        + (h.editedAt ? `<br>✏️ Last edited by <b>${esc(h.editedBy || 'someone')}</b> · ${fmt(h.editedAt)}` : '') + `</div>
+      </div>`;
+    let html = up.length ? up.map(h => card(h, false)).join('')
+      : '<p class="muted">No hangouts planned yet. When you\'ve agreed on a day, add it here with ➕ New hangout.</p>';
+    if (past.length) html += `<details class="pastbox"><summary>Past hangouts (${past.length})</summary>${past.map(h => card(h, true)).join('')}</details>`;
+    el.innerHTML = html;
+  }
+
+  function renderBest(ix, names) {
+    const total = names.length, el = $('#best');
+    if (!total) { el.innerHTML = '<span class="muted">Add your name and mark your days to get started.</span>'; return; }
+    const rows = [];
+    for (let i = 0; i < 365; i++) {
+      const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const iso = isoOf(dt.getFullYear(), dt.getMonth(), dt.getDate());
+      const f = names.filter(n => isFree(ix, n, iso)).length;
+      const m = names.filter(n => ix[n].m.has(iso)).length;
+      if (f || m) rows.push({iso, f, m});
+    }
+    if (!rows.length) { el.innerHTML = '<span class="muted">Nobody has marked any days yet.</span>'; return; }
+    const chip = (r, cls) => `<span class="chip ${cls}" data-jump="${r.iso}"><b>${label(r.iso)}</b> ${r.f}/${total}${r.m ? ' · ❓' + r.m : ''}</span>`;
+    const block = (title, list, cls) => `<div class="blk"><div class="lbl">${title}</div><div class="chips">${list.slice(0, 12).map(r => chip(r, cls)).join('')}</div></div>`;
+    let html = '';
+    if (total >= 2) {
+      const all = rows.filter(r => r.f === total);
+      const maybe = rows.filter(r => r.f < total && r.f + r.m === total);
+      if (all.length) html += block('⭐ Everyone is free', all, 'best');
+      if (maybe.length) html += block('❓ Could work if the "not sure" people say yes', maybe, 'good');
+      if (!html) {
+        const top = rows.filter(r => r.f > 0).sort((a, b) => b.f - a.f || b.m - a.m || (a.iso < b.iso ? -1 : 1));
+        html = top.length ? block('Closest matches so far', top, 'good') : '<span class="muted">Nobody has marked a free day yet.</span>';
+      }
+    } else {
+      const mine = rows.filter(r => r.f > 0);
+      html = mine.length ? block('Your free days', mine, 'good') : '<span class="muted">Mark some free days to get started.</span>';
+    }
+    el.innerHTML = html;
+  }
+
+  function renderPeople(ix, names) {
+    const el = $('#people');
+    if (!names.length) { el.innerHTML = '<span class="muted">Nobody yet.</span>'; return; }
+    el.innerHTML = names.map(n => {
+      const cnt = [...ix[n].m, ...ix[n].b].filter(d => d >= TODAY).length;
       return `<span class="chip"><b>${esc(n)}${n === me ? ' (you)' : ''}</b><span class="muted">${cnt} days marked</span>`
         + `<button data-rm="${esc(n)}" title="Remove">✕</button></span>`;
     }).join('');
