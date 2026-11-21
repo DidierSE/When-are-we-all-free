@@ -19,7 +19,8 @@
   .sub{color:var(--muted);margin:0 0 16px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  input[type=text]{flex:1;min-width:140px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  input[type=text],select{flex:1;min-width:150px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
   button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 14px;border-radius:10px}
   button:hover{border-color:var(--accent)}
   button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
@@ -27,8 +28,9 @@
   .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
   .tabs button{flex:1;border:0;background:transparent;border-radius:9px}
   .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-  .brushes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
-  .brushes button{padding:10px 4px;font-size:.9rem;border-width:2px;text-align:center}
+  .brushes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+  .brushes button{padding:8px 2px;font-size:.72rem;border-width:2px;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .brushes button .ic{font-size:1.15rem;line-height:1}
   .brushes button.on{border-color:var(--accent);font-weight:700;background:color-mix(in srgb,var(--accent) 14%,var(--card))}
   .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
   .nav h2{margin:0;font-size:1.15rem}
@@ -68,7 +70,12 @@
   .n.m{background:color-mix(in srgb,var(--maybe) 32%,var(--card))}
   .n.b{background:color-mix(in srgb,var(--busy) 30%,var(--card))}
   .n.x{background:var(--cell);color:var(--muted)}
-  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+  .menu{position:fixed;z-index:50;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:6px;min-width:160px}
+  .menu .t{font-size:.75rem;color:var(--muted);padding:4px 10px 6px}
+  .menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:11px 12px;border-radius:8px}
+  .menu button:hover,.menu button.cur{background:var(--cell)}
+  .menu button.cur{font-weight:700}
+  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:60}
   #toast.show{opacity:1}
   .hide{display:none!important}
 </style>
@@ -79,9 +86,14 @@
   <p class="sub">Mark your days. Everyone sees the updates live and the app finds the days that work for all of us.</p>
 
   <div class="card">
-    <div class="row">
-      <input type="text" id="name" placeholder="Your name" maxlength="30" autocomplete="off">
-      <button class="primary" id="saveName">Save name</button>
+    <div class="stack">
+      <div class="row" id="pickRow">
+        <select id="nameSel" aria-label="Who are you?"></select>
+      </div>
+      <div class="row hide" id="newRow">
+        <input type="text" id="name" placeholder="Type your name" maxlength="30" autocomplete="off">
+        <button class="primary" id="saveName">Save name</button>
+      </div>
     </div>
     <p class="muted" id="status" style="margin:8px 0 0"></p>
   </div>
@@ -94,10 +106,11 @@
 
     <div id="brushWrap">
       <div class="brushes" id="brushes">
-        <button data-brush="f" class="on">✅ Free</button>
-        <button data-brush="m">❓ Not sure</button>
-        <button data-brush="b">❌ Busy</button>
-        <button data-brush="x">🧽 Clear</button>
+        <button data-brush="menu" class="on"><span class="ic">👆</span>Menu</button>
+        <button data-brush="f"><span class="ic">✅</span>Free</button>
+        <button data-brush="m"><span class="ic">❓</span>Not sure</button>
+        <button data-brush="b"><span class="ic">❌</span>Busy</button>
+        <button data-brush="x"><span class="ic">🧽</span>Clear</button>
       </div>
     </div>
 
@@ -113,7 +126,7 @@
       <span><i style="background:var(--free)"></i>Free</span>
       <span><i style="background:var(--maybe)"></i>Not sure</span>
       <span><i style="background:var(--busy)"></i>Busy</span>
-      <span>Pick a button, then tap or drag days. Unmarked = no answer yet.</span>
+      <span>👆 Menu: tap a day and choose. Or pick a colour button to mark days with one tap. Unmarked = no answer yet.</span>
     </div>
     <div class="legend hide" id="legendGroup">
       <span><i style="background:var(--free)"></i>Greener = more people free</span>
@@ -121,7 +134,7 @@
       <span>❓2 = two people not sure</span>
     </div>
     <div class="row hide" id="quick" style="margin-top:12px">
-      <button class="small" id="weekends">Apply to all weekends this month</button>
+      <button class="small" id="weekends">All weekends this month…</button>
       <button class="small" id="clearMonth">Clear this month</button>
     </div>
     <div id="detail" class="detail hide"></div>
@@ -168,11 +181,11 @@
   const ICON = {f: '✓', m: '?', b: '✕'};
 
   // ---------- state ----------
-  let me = '';              // the name saved on this device
+  let me = '';              // the name picked on this device
   let people = {};          // name -> {f: free days, m: not sure days, b: busy days}
   let loaded = !CLOUD;      // true once the shared calendar has been read
   let dirty = false, pushT = null, ver = 0;
-  let mode = 'edit', brush = 'f', selected = null, paint = null, lastPointer = 'mouse';
+  let mode = 'edit', brush = 'menu', selected = null, newMode = false, nameSig = '';
   let view = {y: now.getFullYear(), m: now.getMonth()};
 
   try {
@@ -208,6 +221,7 @@
         if (v && v.n) out[v.n] = {f: parse(v.f !== undefined ? v.f : v.d), m: parse(v.m), b: parse(v.b)};
       }
       if (dirty && me && people[me]) out[me] = people[me];   // don't overwrite my edits that are still being sent
+      if (me && !out[me]) { me = ''; saveLocal(); }          // my name was removed from the group
       people = out; loaded = true; setStatus(true); render();
     } catch (e) { setStatus(false); }
   }
@@ -249,21 +263,64 @@
     const p = people[name]; if (!p) return null;
     return p.f.includes(iso) ? 'f' : p.m.includes(iso) ? 'm' : p.b.includes(iso) ? 'b' : null;
   };
-  const brushVal = () => brush === 'x' ? null : brush;
+  const brushVal = () => (brush === 'x' || brush === 'menu') ? null : brush;
 
-  function setDay(iso, s) {
-    if (!me) { toast('Enter your name first 👆'); $('#name').focus(); return false; }
+  function canEdit() {
+    if (!me) { toast('Pick your name first 👆'); return false; }
     if (!loaded) { toast('Still connecting, try again in a second'); return false; }
-    if (iso < TODAY) return false;
+    return true;
+  }
+  function setDay(iso, s) {
+    if (iso < TODAY || !canEdit()) return false;
     const p = people[me] || (people[me] = empty());
     for (const k of KINDS) p[k] = p[k].filter(d => d !== iso);
     if (s) p[s].push(iso);
     return true;
   }
 
+  // ---------- pop-up menu (Free / Not sure / Busy / Clear) ----------
+  let menuEl = null;
+  function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
+  function openMenu(anchor, title, current, onPick) {
+    closeMenu();
+    const items = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy'], ['x', '🧽 Clear']];
+    const m = document.createElement('div');
+    m.className = 'menu';
+    m.innerHTML = `<div class="t">${esc(title)}</div>` + items.map(([k, t]) =>
+      `<button data-k="${k}" class="${(k === 'x' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('');
+    m.addEventListener('click', e => {
+      const b = e.target.closest('button[data-k]'); if (!b) return;
+      const k = b.dataset.k; closeMenu(); onPick(k === 'x' ? null : k);
+    });
+    document.body.appendChild(m);
+    const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
+    const left = Math.min(Math.max(8, r.left), Math.max(8, window.innerWidth - w - 8));
+    let top = r.bottom + 6;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
+    m.style.left = left + 'px'; m.style.top = top + 'px';
+    menuEl = m;
+  }
+  document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  window.addEventListener('scroll', closeMenu, {passive: true});
+  window.addEventListener('resize', closeMenu);
+
   // ---------- rendering ----------
+  function renderNameUI(names) {
+    const showNew = newMode || names.length === 0;
+    $('#pickRow').classList.toggle('hide', names.length === 0);
+    $('#newRow').classList.toggle('hide', !showNew);
+    const sig = names.join('|') + '#' + me + '#' + showNew;
+    if (sig === nameSig) return;                 // don't rebuild (and close) the dropdown for no reason
+    nameSig = sig;
+    $('#nameSel').innerHTML =
+      `<option value="" disabled ${!me && !showNew ? 'selected' : ''}>Who are you? Pick your name</option>`
+      + names.map(n => `<option value="${esc(n)}" ${n === me && !showNew ? 'selected' : ''}>${esc(n)}</option>`).join('')
+      + `<option value="__new" ${showNew ? 'selected' : ''}>➕ I'm not on the list</option>`;
+  }
+
   function render() {
-    const ix = index(), names = Object.keys(ix), total = names.length;
+    const ix = index(), names = Object.keys(ix).sort((a, b) => a.localeCompare(b)), total = names.length;
     $('#monthLabel').textContent = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
 
     const first = new Date(view.y, view.m, 1);
@@ -304,6 +361,7 @@
     $('#legendGroup').classList.toggle('hide', mode !== 'group');
     $('#quick').classList.toggle('hide', mode !== 'edit');
     document.querySelectorAll('#brushes button').forEach(b => b.classList.toggle('on', b.dataset.brush === brush));
+    renderNameUI(names);
     renderDetail(ix, names);
     renderBest(ix, names);
     renderPeople(ix, names);
@@ -368,25 +426,16 @@
     }).join('');
   }
 
-  // ---------- marking days ----------
-  const dayEl = e => e.target.closest('.day[data-iso]');
-
-  $('#grid').addEventListener('pointerdown', e => {
-    lastPointer = e.pointerType;
-    const el = dayEl(e); if (!el || mode !== 'edit' || e.pointerType !== 'mouse') return;
-    paint = {s: stat(me, el.dataset.iso) === brushVal() ? null : brushVal()};
-    if (setDay(el.dataset.iso, paint.s)) { persist(); render(); } else paint = null;
-  });
-  $('#grid').addEventListener('pointerover', e => {
-    const el = dayEl(e); if (!el || !paint) return;
-    if (setDay(el.dataset.iso, paint.s)) { persist(); render(); }
-  });
-  document.addEventListener('pointerup', () => { paint = null; });
+  // ---------- tapping a day ----------
   $('#grid').addEventListener('click', e => {
-    const el = dayEl(e); if (!el) return;
-    if (mode === 'group') { selected = el.dataset.iso; render(); return; }
-    if (lastPointer === 'mouse') return;       // mouse clicks were already handled on pointerdown
+    const el = e.target.closest('.day[data-iso]'); if (!el) return;
     const iso = el.dataset.iso;
+    if (mode === 'group') { selected = iso; render(); return; }
+    if (iso < TODAY || !canEdit()) return;
+    if (brush === 'menu') {
+      openMenu(el, label(iso), stat(me, iso), s => { if (setDay(iso, s)) { persist(); render(); } });
+      return;
+    }
     if (setDay(iso, stat(me, iso) === brushVal() ? null : brushVal())) { persist(); render(); }
   });
 
@@ -400,35 +449,38 @@
     brush = b.dataset.brush; render();
   });
 
+  $('#nameSel').addEventListener('change', e => {
+    const v = e.target.value;
+    if (v === '__new') { newMode = true; nameSig = ''; render(); $('#name').focus(); return; }
+    newMode = false; me = v; saveLocal(); render();
+    toast(`Hi ${me}! Tap a day to mark it.`);
+  });
   $('#saveName').onclick = () => {
     const raw = $('#name').value.trim().slice(0, 30);
     if (!raw) { toast('Type your name first'); return; }
     if (CLOUD && !loaded) { toast('Still connecting, try again in a second'); return; }
     const existing = Object.keys(people).find(n => n.toLowerCase() === raw.toLowerCase());
-    const old = me;
     let created = false;
-    if (existing) {
-      if (existing !== old && !confirm(`"${existing}" is already in the group. Is that you?\n\nOK = yes, continue as ${existing}\nCancel = pick a different name`)) return;
-      me = existing;          // use the saved days, never overwrite them
-    } else {
-      if (old && people[old]) { people[raw] = people[old]; delete people[old]; cloudDelete(old); }
-      else people[raw] = empty();
-      me = raw; created = true;
-    }
-    $('#name').value = me;
+    if (existing) { me = existing; toast(`${existing} is already in the group, so you're signed in as ${existing}.`); }
+    else { people[raw] = empty(); me = raw; created = true; toast(`Hi ${me}! Tap a day to mark it.`); }
+    newMode = false; nameSig = ''; $('#name').value = '';
     saveLocal(); if (created) cloudPush();
-    render(); toast(`Hi ${me}! Pick a button and tap the days.`);
+    render();
   };
   $('#name').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveName').click(); });
 
   $('#weekends').onclick = () => {
-    if (!me) { toast('Enter your name first 👆'); return; }
-    const dim = new Date(view.y, view.m + 1, 0).getDate();
-    for (let d = 1; d <= dim; d++) {
-      const dow = new Date(view.y, view.m, d).getDay();
-      if (dow === 0 || dow === 6) setDay(isoOf(view.y, view.m, d), brushVal());
-    }
-    persist(); render();
+    if (!canEdit()) return;
+    const apply = s => {
+      const dim = new Date(view.y, view.m + 1, 0).getDate();
+      for (let d = 1; d <= dim; d++) {
+        const dow = new Date(view.y, view.m, d).getDay();
+        if (dow === 0 || dow === 6) setDay(isoOf(view.y, view.m, d), s);
+      }
+      persist(); render();
+    };
+    if (brush === 'menu') openMenu($('#weekends'), 'All weekends this month', undefined, apply);
+    else apply(brushVal());
   };
   $('#clearMonth').onclick = () => {
     if (!me || !people[me]) return;
@@ -459,11 +511,10 @@
   }
   const dows = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   $('#dows').innerHTML = dows.map(d => `<div class="dow">${d}</div>`).join('');
-  $('#name').value = me;
   setStatus(CLOUD ? true : null);
   if (CLOUD) { $('#status').textContent = 'Connecting...'; cloudStart(); }
   render();
-  if (!me) toast('Start by entering your name 👋');
+  if (!me) toast('Start by picking your name 👋');
 })();
 </script>
 </body>
