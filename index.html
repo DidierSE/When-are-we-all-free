@@ -371,16 +371,19 @@
   // ---------- pop-up menu (Free / Not sure / Busy / Clear) ----------
   let menuEl = null;
   function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
-  function openMenu(anchor, title, current, onPick) {
+  function openMenu(anchor, title, current, onPick, onHang) {
     closeMenu();
     const items = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
     const m = document.createElement('div');
     m.className = 'menu';
     m.innerHTML = `<div class="t">${esc(title)}</div>` + items.map(([k, t]) =>
-      `<button data-k="${k}" class="${(k === 'f' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('');
+      `<button data-k="${k}" class="${(k === 'f' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('')
+      + (onHang ? '<button data-k="hang">🎉 Group Hangout</button>' : '');
     m.addEventListener('click', e => {
       const b = e.target.closest('button[data-k]'); if (!b) return;
-      const k = b.dataset.k; closeMenu(); onPick(k === 'f' ? null : k);
+      const k = b.dataset.k; closeMenu();
+      if (k === 'hang') { onHang(); return; }
+      onPick(k === 'f' ? null : k);
     });
     document.body.appendChild(m);
     const r = anchor.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
@@ -438,21 +441,15 @@
         const m = names.filter(n => ix[n].m.has(iso)).length;
         const b = names.filter(n => ix[n].b.has(iso)).length;
         if (iso === selected) cls.push('sel');
-        if (total && !hang) {
-          if (b > 0) {
-            // Any busy response makes the group day red; stronger red means more people busy.
-            const pct = Math.max(28, Math.round(b / total * 85));
-            style = `style="background:color-mix(in srgb,var(--busy) ${pct}%,var(--cell));color:#3a0707"`;
-          } else if (f > 0) {
-            const pct = Math.round(f / total * 85);
-            style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .6 ? 'color:#06260f' : ''}"`;
-          }
+        if (f && total && !hang) {
+          const pct = Math.round(f / total * 85);
+          style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .6 ? 'color:#06260f' : ''}"`;
         }
         const all = total >= 2 && f === total && !past;
         if (all) cls.push('all');
         if (hang) inner += '<span class="hg">🎉</span>';
         else if (all) inner += '<span class="star">⭐</span>';
-        if (total) inner += `<span class="count">${hang && all ? '⭐' : ''}${f}/${total}</span>`;
+        if (f || m || hang) inner += `<span class="count">${hang && all ? '⭐' : ''}${f}/${total}</span>`;
         const side = [m ? '❓' + m : '', hang && b ? '❌' + b : ''].filter(Boolean).join(' ');
         if (side) inner += `<span class="qm">${side}</span>`;
       }
@@ -588,7 +585,8 @@
     if (mode === 'group') { selected = iso; render(); return; }
     if (iso < TODAY || !canEdit()) return;
     if (brush === 'menu') {
-      openMenu(el, label(iso), stat(me, iso), s => { if (setDay(iso, s)) { persist(); render(); } });
+      openMenu(el, label(iso), stat(me, iso), s => { if (setDay(iso, s)) { persist(); render(); } },
+        () => openHangForm(null, iso));
       return;
     }
     if (setDay(iso, stat(me, iso) === brushVal() ? null : brushVal())) { persist(); render(); }
