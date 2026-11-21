@@ -20,13 +20,14 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .stack{display:flex;flex-direction:column;gap:8px}
-  input[type=text],select{flex:1;min-width:150px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+  input[type=text],input[type=date],input[type=time],select,textarea{flex:1;min-width:150px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+  textarea{resize:vertical}
   button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 14px;border-radius:10px}
   button:hover{border-color:var(--accent)}
   button.primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
   button.small{padding:5px 10px;font-size:.85rem}
   .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
-  .tabs button{flex:1;border:0;background:transparent;border-radius:9px}
+  .tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font-size:.9rem}
   .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
   .brushes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
   .brushes button{padding:8px 2px;font-size:.72rem;border-width:2px;display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -48,7 +49,7 @@
   .mark{position:absolute;bottom:3px;right:6px;font-size:.95rem;font-weight:800}
   .count{position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:700;opacity:.85}
   .qm{position:absolute;bottom:4px;left:6px;font-size:.65rem;font-weight:700}
-  .star{position:absolute;top:3px;right:5px;font-size:.8rem}
+  .star,.hg{position:absolute;top:3px;right:5px;font-size:.8rem}
   .legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;margin-top:10px}
   .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:4px}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -65,16 +66,36 @@
   .muted{color:var(--muted);font-size:.9rem}
   .detail{margin-top:12px}
   .detail .g{margin-top:6px}
-  .detail span.n{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:999px;font-size:.85rem}
+  .detail .plan{margin-top:10px}
+  span.n{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:999px;font-size:.85rem}
   .n.f{background:color-mix(in srgb,var(--free) 28%,var(--card))}
   .n.m{background:color-mix(in srgb,var(--maybe) 32%,var(--card))}
   .n.b{background:color-mix(in srgb,var(--busy) 30%,var(--card))}
   .n.x{background:var(--cell);color:var(--muted)}
+  .n.d{background:transparent;border:1px dashed var(--free)}
   .menu{position:fixed;z-index:50;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:6px;min-width:160px}
   .menu .t{font-size:.75rem;color:var(--muted);padding:4px 10px 6px}
   .menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:11px 12px;border-radius:8px}
   .menu button:hover,.menu button.cur{background:var(--cell)}
   .menu button.cur{font-weight:700}
+  /* hangouts */
+  .hform{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px;background:var(--bg)}
+  .hform label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:10px}
+  .hform label input,.hform label textarea{display:block;width:100%;min-width:0;margin-top:4px;background:var(--card)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .hcard{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .hcard.past{opacity:.7}
+  .hhead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
+  .hdate{font-weight:600;color:var(--accent)}
+  .rel{font-weight:500;color:var(--muted);font-size:.85rem;margin-left:4px}
+  .hbtns{display:flex;gap:6px}
+  .htitle{font-size:1.1rem;font-weight:700;margin:6px 0 2px}
+  .hmeta{margin:2px 0}
+  .hnotes{white-space:pre-wrap;margin:8px 0;background:var(--cell);border-radius:10px;padding:10px 12px}
+  .hwho{margin-top:8px;font-size:.85rem;color:var(--muted)}
+  .hauthor{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:.8rem;color:var(--muted);line-height:1.6}
+  details.pastbox{margin-top:8px}
+  details.pastbox summary{cursor:pointer;color:var(--muted);margin-bottom:10px}
   #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:60}
   #toast.show{opacity:1}
   .hide{display:none!important}
@@ -102,42 +123,76 @@
     <div class="tabs">
       <button id="tabEdit" class="on">✏️ My days</button>
       <button id="tabGroup">👥 Group view</button>
+      <button id="tabHang">🎉 Hangouts</button>
     </div>
 
-    <div id="brushWrap">
-      <div class="brushes" id="brushes">
-        <button data-brush="menu" class="on"><span class="ic">👆</span>Menu</button>
-        <button data-brush="f"><span class="ic">✅</span>Free</button>
-        <button data-brush="m"><span class="ic">❓</span>Not sure</button>
-        <button data-brush="b"><span class="ic">❌</span>Busy</button>
-        <button data-brush="x"><span class="ic">🧽</span>Clear</button>
+    <div id="calView">
+      <div id="brushWrap">
+        <div class="brushes" id="brushes">
+          <button data-brush="menu" class="on"><span class="ic">👆</span>Menu</button>
+          <button data-brush="f"><span class="ic">✅</span>Free</button>
+          <button data-brush="m"><span class="ic">❓</span>Not sure</button>
+          <button data-brush="b"><span class="ic">❌</span>Busy</button>
+          <button data-brush="x"><span class="ic">🧽</span>Clear</button>
+        </div>
       </div>
+
+      <div class="nav">
+        <button id="prev" aria-label="Previous month">‹</button>
+        <h2 id="monthLabel"></h2>
+        <button id="next" aria-label="Next month">›</button>
+      </div>
+      <div class="grid" id="dows"></div>
+      <div class="grid" id="grid" style="margin-top:6px"></div>
+
+      <div class="legend" id="legendEdit">
+        <span><i style="background:var(--free)"></i>Free</span>
+        <span><i style="background:var(--maybe)"></i>Not sure</span>
+        <span><i style="background:var(--busy)"></i>Busy</span>
+        <span>🎉 confirmed hangout</span>
+        <span>👆 Menu: tap a day and choose. Or pick a colour button to mark days with one tap. Days you leave unmarked count as free.</span>
+      </div>
+      <div class="legend hide" id="legendGroup">
+        <span><i style="background:var(--free)"></i>Greener = more people free</span>
+        <span>⭐ everyone is free</span>
+        <span>❓2 = two people not sure</span>
+        <span>Unmarked days count as free</span>
+        <span>🎉 confirmed hangout</span>
+      </div>
+      <div class="row hide" id="quick" style="margin-top:12px">
+        <button class="small" id="weekends">All weekends this month…</button>
+        <button class="small" id="clearMonth">Clear this month</button>
+      </div>
+      <div id="detail" class="detail hide"></div>
     </div>
 
-    <div class="nav">
-      <button id="prev" aria-label="Previous month">‹</button>
-      <h2 id="monthLabel"></h2>
-      <button id="next" aria-label="Next month">›</button>
+    <div id="hangView" class="hide">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <b>Confirmed hangouts</b>
+        <button class="primary small" id="newHang">➕ New hangout</button>
+      </div>
+      <div id="hangForm" class="hform hide">
+        <h3 id="hfTitle">New hangout</h3>
+        <label>What are we doing?
+          <input type="text" id="hfWhat" maxlength="80" placeholder="e.g. Dinner and cards">
+        </label>
+        <div class="row2">
+          <label>Date <input type="date" id="hfDate"></label>
+          <label>Time (optional) <input type="time" id="hfTime"></label>
+        </div>
+        <label>Where (optional)
+          <input type="text" id="hfWhere" maxlength="80" placeholder="e.g. Didier's place">
+        </label>
+        <label>Notes
+          <textarea id="hfNotes" rows="4" maxlength="1000" placeholder="Who's booking, what to bring, the plan..."></textarea>
+        </label>
+        <div class="row">
+          <button class="primary" id="hfSave">Save hangout</button>
+          <button id="hfCancel">Cancel</button>
+        </div>
+      </div>
+      <div id="hangList"></div>
     </div>
-    <div class="grid" id="dows"></div>
-    <div class="grid" id="grid" style="margin-top:6px"></div>
-
-    <div class="legend" id="legendEdit">
-      <span><i style="background:var(--free)"></i>Free</span>
-      <span><i style="background:var(--maybe)"></i>Not sure</span>
-      <span><i style="background:var(--busy)"></i>Busy</span>
-      <span>👆 Menu: tap a day and choose. Or pick a colour button to mark days with one tap. Unmarked = no answer yet.</span>
-    </div>
-    <div class="legend hide" id="legendGroup">
-      <span><i style="background:var(--free)"></i>Greener = more people free</span>
-      <span>⭐ everyone is free</span>
-      <span>❓2 = two people not sure</span>
-    </div>
-    <div class="row hide" id="quick" style="margin-top:12px">
-      <button class="small" id="weekends">All weekends this month…</button>
-      <button class="small" id="clearMonth">Clear this month</button>
-    </div>
-    <div id="detail" class="detail hide"></div>
   </div>
 
   <div class="card">
@@ -176,6 +231,7 @@
   const now = new Date();
   const TODAY = isoOf(now.getFullYear(), now.getMonth(), now.getDate());
   const label = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+  const fmt = ms => new Date(ms).toLocaleString('en-GB', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
   const empty = () => ({f: [], m: [], b: []});
   const KINDS = ['f', 'm', 'b'];
   const ICON = {f: '✓', m: '?', b: '✕'};
@@ -183,17 +239,20 @@
   // ---------- state ----------
   let me = '';              // the name picked on this device
   let people = {};          // name -> {f: free days, m: not sure days, b: busy days}
+  let hangouts = {};        // id -> {id, title, date, time, place, notes, by, at, editedBy, editedAt}
+  let pendingH = {};        // hangout changes not yet confirmed by the database (id -> hangout, or null = deleted)
   let loaded = !CLOUD;      // true once the shared calendar has been read
   let dirty = false, pushT = null, ver = 0;
   let mode = 'edit', brush = 'menu', selected = null, newMode = false, nameSig = '';
+  let formOpen = false, editingId = null;
   let view = {y: now.getFullYear(), m: now.getMonth()};
 
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s) { me = s.me || ''; if (!CLOUD && s.people) people = s.people; }
+    if (s) { me = s.me || ''; if (!CLOUD) { people = s.people || {}; hangouts = s.hangouts || {}; } }
     else { const o = JSON.parse(localStorage.getItem('whenfree.v1') || 'null'); if (o && o.me) me = o.me; }
   } catch (e) {}
-  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify({me, people: CLOUD ? {} : people})); } catch (e) {} };
+  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify({me, people: CLOUD ? {} : people, hangouts: CLOUD ? {} : hangouts})); } catch (e) {} };
 
   function toast(msg) {
     const t = $('#toast'); t.textContent = msg; t.classList.add('show');
@@ -213,16 +272,22 @@
   }
   async function cloudPull() {
     try {
-      const r = await fetch(cUrl('/people'), {cache: 'no-store'});
+      const r = await fetch(cUrl(''), {cache: 'no-store'});
       if (!r.ok) throw 0;
-      const j = (await r.json()) || {};
+      const root = (await r.json()) || {};
       const out = {};
-      for (const v of Object.values(j)) {
+      for (const v of Object.values(root.people || {})) {
         if (v && v.n) out[v.n] = {f: parse(v.f !== undefined ? v.f : v.d), m: parse(v.m), b: parse(v.b)};
       }
+      const hout = {};
+      for (const v of Object.values(root.hangouts || {})) {
+        if (v && v.id && v.date) hout[v.id] = {id: v.id, title: v.title || '', date: v.date, time: v.time || '', place: v.place || '',
+          notes: v.notes || '', by: v.by || '', at: +v.at || 0, editedBy: v.editedBy || '', editedAt: +v.editedAt || 0};
+      }
+      for (const [id, h] of Object.entries(pendingH)) { if (h) hout[id] = h; else delete hout[id]; }   // keep my unsent changes
       if (dirty && me && people[me]) out[me] = people[me];   // don't overwrite my edits that are still being sent
       if (me && !out[me]) { me = ''; saveLocal(); }          // my name was removed from the group
-      people = out; loaded = true; setStatus(true); render();
+      people = out; hangouts = hout; loaded = true; setStatus(true); render();
     } catch (e) { setStatus(false); }
   }
   function cloudPush() {
@@ -242,14 +307,35 @@
   function cloudDelete(name) {
     if (CLOUD) fetch(cUrl('/people/' + encodeURIComponent(cKey(name))), {method: 'DELETE'}).catch(() => {});
   }
+  async function hangPut(h) {
+    if (!CLOUD) { saveLocal(); return; }
+    pendingH[h.id] = h;
+    try {
+      const r = await fetch(cUrl('/hangouts/' + h.id), {method: 'PUT', body: JSON.stringify(h)});
+      if (r.ok && pendingH[h.id] === h) delete pendingH[h.id];
+      setStatus(r.ok);
+    } catch (e) { setStatus(false); }
+  }
+  async function hangDel(id) {
+    delete hangouts[id];
+    if (!CLOUD) { saveLocal(); return; }
+    pendingH[id] = null;
+    try {
+      const r = await fetch(cUrl('/hangouts/' + id), {method: 'DELETE'});
+      if (r.ok && pendingH[id] === null) delete pendingH[id];
+      setStatus(r.ok);
+    } catch (e) { setStatus(false); }
+  }
+  function retryPending() { for (const [id, h] of Object.entries(pendingH)) { if (h) hangPut(h); else hangDel(id); } }
   function cloudStart() {
     cloudPull();
     try {
-      const es = new EventSource(cUrl('/people'));
+      const es = new EventSource(cUrl(''));
       es.addEventListener('put', cloudPull);
       es.addEventListener('patch', cloudPull);
     } catch (e) {}
     setInterval(cloudPull, 20000);
+    setInterval(retryPending, 20000);
   }
   const persist = () => { saveLocal(); cloudPush(); };
 
@@ -264,6 +350,8 @@
     return p.f.includes(iso) ? 'f' : p.m.includes(iso) ? 'm' : p.b.includes(iso) ? 'b' : null;
   };
   const brushVal = () => (brush === 'x' || brush === 'menu') ? null : brush;
+  // A day someone left unmarked counts as free for them.
+  const isFree = (ix, n, iso) => !ix[n].m.has(iso) && !ix[n].b.has(iso);
 
   function canEdit() {
     if (!me) { toast('Pick your name first 👆'); return false; }
@@ -321,6 +409,7 @@
 
   function render() {
     const ix = index(), names = Object.keys(ix).sort((a, b) => a.localeCompare(b)), total = names.length;
+    const hdays = new Set(Object.values(hangouts).map(h => h.date));
     $('#monthLabel').textContent = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
 
     const first = new Date(view.y, view.m, 1);
@@ -338,15 +427,19 @@
       if (mode === 'edit') {
         const s = stat(me, iso);
         if (s) { cls.push('s-' + s); inner = `<span class="mark">${ICON[s]}</span>`; }
+        if (hdays.has(iso)) inner += '<span class="hg">🎉</span>';
       } else {
-        const f = names.filter(n => ix[n].f.has(iso)).length;
+        const f = names.filter(n => isFree(ix, n, iso)).length;
         const m = names.filter(n => ix[n].m.has(iso)).length;
         if (iso === selected) cls.push('sel');
         if (f && total) {
           const pct = Math.round(f / total * 85);
           style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .6 ? 'color:#06260f' : ''}"`;
         }
-        if (total >= 2 && f === total && !past) { cls.push('all'); inner += '<span class="star">⭐</span>'; }
+        const all = total >= 2 && f === total && !past;
+        if (all) cls.push('all');
+        if (hdays.has(iso)) inner += '<span class="hg">🎉</span>';
+        else if (all) inner += '<span class="star">⭐</span>';
         if (f || m) inner += `<span class="count">${f}/${total}</span>`;
         if (m) inner += `<span class="qm">❓${m}</span>`;
       }
@@ -354,17 +447,37 @@
     }
     $('#grid').innerHTML = html;
 
+    const cal = mode !== 'hangouts';
+    $('#calView').classList.toggle('hide', !cal);
+    $('#hangView').classList.toggle('hide', cal);
     $('#tabEdit').classList.toggle('on', mode === 'edit');
     $('#tabGroup').classList.toggle('on', mode === 'group');
+    $('#tabHang').classList.toggle('on', mode === 'hangouts');
     $('#brushWrap').classList.toggle('hide', mode !== 'edit');
     $('#legendEdit').classList.toggle('hide', mode !== 'edit');
     $('#legendGroup').classList.toggle('hide', mode !== 'group');
     $('#quick').classList.toggle('hide', mode !== 'edit');
+    $('#hangForm').classList.toggle('hide', !formOpen);
     document.querySelectorAll('#brushes button').forEach(b => b.classList.toggle('on', b.dataset.brush === brush));
     renderNameUI(names);
     renderDetail(ix, names);
+    renderHangouts(ix, names);
     renderBest(ix, names);
     renderPeople(ix, names);
+  }
+
+  // A name chip; dashed when the person didn't mark the day (counted as free).
+  const chipOf = (ix, n, k, iso) => {
+    const assumed = k === 'f' && !ix[n].f.has(iso);
+    return `<span class="n ${k}${assumed ? ' d' : ''}"${assumed ? ' title="Did not mark this day, counted as free"' : ''}>${esc(n)}</span>`;
+  };
+  function whoFree(ix, names, iso) {
+    const groups = {f: names.filter(n => isFree(ix, n, iso)), m: names.filter(n => ix[n].m.has(iso)), b: names.filter(n => ix[n].b.has(iso))};
+    const parts = [];
+    for (const [k, t] of [['f', '✅'], ['m', '❓'], ['b', '❌']]) {
+      if (groups[k].length) parts.push(`${t} ${groups[k].map(n => chipOf(ix, n, k, iso)).join('')}`);
+    }
+    return parts.join(' ');
   }
 
   function renderDetail(ix, names) {
@@ -373,15 +486,45 @@
     el.classList.remove('hide');
     if (!selected) { el.innerHTML = '<span class="muted">Tap a day to see who is free.</span>'; return; }
     const groups = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
-    const seen = new Set();
     let html = `<b>${label(selected)}</b>`;
+    let assumed = false;
     for (const [k, title] of groups) {
-      const list = names.filter(n => ix[n][k].has(selected));
-      list.forEach(n => seen.add(n));
-      if (list.length) html += `<div class="g">${title}: ${list.map(n => `<span class="n ${k}">${esc(n)}</span>`).join('')}</div>`;
+      const list = k === 'f' ? names.filter(n => isFree(ix, n, selected)) : names.filter(n => ix[n][k].has(selected));
+      if (k === 'f' && list.some(n => !ix[n].f.has(selected))) assumed = true;
+      if (list.length) html += `<div class="g">${title}: ${list.map(n => chipOf(ix, n, k, selected)).join('')}</div>`;
     }
-    const none = names.filter(n => !seen.has(n));
-    if (none.length) html += `<div class="g">⚪ No answer: ${none.map(n => `<span class="n x">${esc(n)}</span>`).join('')}</div>`;
+    if (assumed) html += '<div class="g muted">Dashed = didn\'t mark this day, counted as free.</div>';
+    const here = Object.values(hangouts).filter(h => h.date === selected);
+    for (const h of here) html += `<div class="g">🎉 <b>${esc(h.title)}</b> is planned this day</div>`;
+    if (selected >= TODAY) html += `<div class="plan"><button class="small" data-plan="${selected}">🎉 Plan a hangout on this day</button></div>`;
+    el.innerHTML = html;
+  }
+
+  function renderHangouts(ix, names) {
+    const el = $('#hangList');
+    const list = Object.values(hangouts);
+    const key = h => h.date + ' ' + (h.time || '');
+    const up = list.filter(h => h.date >= TODAY).sort((a, b) => key(a) < key(b) ? -1 : 1);
+    const past = list.filter(h => h.date < TODAY).sort((a, b) => key(a) < key(b) ? 1 : -1);
+    const rel = iso => {
+      const n = Math.round((new Date(iso + 'T00:00:00') - new Date(TODAY + 'T00:00:00')) / 864e5);
+      return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n > 1 ? `in ${n} days` : '';
+    };
+    const card = (h, isPast) => `<div class="hcard ${isPast ? 'past' : ''}">
+        <div class="hhead">
+          <div class="hdate">📅 ${label(h.date)}${h.time ? ' · ' + esc(h.time) : ''}${isPast ? '' : `<span class="rel">${rel(h.date)}</span>`}</div>
+          <div class="hbtns"><button class="small" data-hedit="${esc(h.id)}">✏️ Edit</button><button class="small" data-hdel="${esc(h.id)}">🗑 Delete</button></div>
+        </div>
+        <div class="htitle">${esc(h.title)}</div>
+        ${h.place ? `<div class="hmeta">📍 ${esc(h.place)}</div>` : ''}
+        ${h.notes ? `<div class="hnotes">${esc(h.notes)}</div>` : ''}
+        ${isPast ? '' : `<div class="hwho">Availability that day: ${whoFree(ix, names, h.date) || 'nobody has answered yet'}</div>`}
+        <div class="hauthor">✍️ Written by <b>${esc(h.by || 'someone')}</b>${h.at ? ' · ' + fmt(h.at) : ''}`
+        + (h.editedAt ? `<br>✏️ Last edited by <b>${esc(h.editedBy || 'someone')}</b> · ${fmt(h.editedAt)}` : '') + `</div>
+      </div>`;
+    let html = up.length ? up.map(h => card(h, false)).join('')
+      : '<p class="muted">No hangouts planned yet. When you\'ve agreed on a day, add it here with ➕ New hangout.</p>';
+    if (past.length) html += `<details class="pastbox"><summary>Past hangouts (${past.length})</summary>${past.map(h => card(h, true)).join('')}</details>`;
     el.innerHTML = html;
   }
 
@@ -392,7 +535,7 @@
     for (let i = 0; i < 365; i++) {
       const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
       const iso = isoOf(dt.getFullYear(), dt.getMonth(), dt.getDate());
-      const f = names.filter(n => ix[n].f.has(iso)).length;
+      const f = names.filter(n => isFree(ix, n, iso)).length;
       const m = names.filter(n => ix[n].m.has(iso)).length;
       if (f || m) rows.push({iso, f, m});
     }
@@ -439,9 +582,57 @@
     if (setDay(iso, stat(me, iso) === brushVal() ? null : brushVal())) { persist(); render(); }
   });
 
+  // ---------- hangouts ----------
+  function openHangForm(h, date) {
+    if (!canEdit()) return;
+    editingId = h ? h.id : null;
+    $('#hfTitle').textContent = h ? 'Edit hangout' : 'New hangout';
+    $('#hfWhat').value = h ? h.title : '';
+    $('#hfDate').value = h ? h.date : (date || '');
+    $('#hfTime').value = h ? h.time : '';
+    $('#hfWhere').value = h ? h.place : '';
+    $('#hfNotes').value = h ? h.notes : '';
+    formOpen = true; mode = 'hangouts'; render();
+    $('#hangForm').scrollIntoView({behavior: 'smooth', block: 'center'});
+    $('#hfWhat').focus();
+  }
+  $('#newHang').onclick = () => openHangForm(null, selected && selected >= TODAY ? selected : '');
+  $('#hfCancel').onclick = () => { formOpen = false; editingId = null; render(); };
+  $('#hfSave').onclick = () => {
+    if (!canEdit()) return;
+    const title = $('#hfWhat').value.trim(), date = $('#hfDate').value;
+    if (!title) { toast('Write what the hangout is 👆'); $('#hfWhat').focus(); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast('Pick a date'); return; }
+    const f = {title, date, time: $('#hfTime').value, place: $('#hfWhere').value.trim(), notes: $('#hfNotes').value.trim()};
+    const t = Date.now();
+    let h, msg;
+    if (editingId && hangouts[editingId]) {
+      const old = hangouts[editingId];
+      if (['title', 'date', 'time', 'place', 'notes'].every(k => old[k] === f[k])) { formOpen = false; editingId = null; render(); toast('No changes made'); return; }
+      h = {...old, ...f, editedBy: me, editedAt: t}; msg = 'Hangout updated ✏️';
+    } else {
+      h = {id: t.toString(36) + Math.random().toString(36).slice(2, 6), ...f, by: me, at: t, editedBy: '', editedAt: 0}; msg = 'Hangout added 🎉';
+    }
+    hangouts[h.id] = h; hangPut(h);
+    formOpen = false; editingId = null; render(); toast(msg);
+  };
+  $('#hangList').addEventListener('click', e => {
+    const ed = e.target.closest('[data-hedit]');
+    if (ed) { const h = hangouts[ed.dataset.hedit]; if (h) openHangForm(h); return; }
+    const del = e.target.closest('[data-hdel]');
+    if (del) {
+      const h = hangouts[del.dataset.hdel]; if (!h || !canEdit()) return;
+      if (confirm(`Delete "${h.title}" for everyone?`)) { hangDel(h.id); render(); toast('Hangout deleted'); }
+    }
+  });
+  $('#detail').addEventListener('click', e => {
+    const b = e.target.closest('[data-plan]'); if (b) openHangForm(null, b.dataset.plan);
+  });
+
   // ---------- controls ----------
-  $('#tabEdit').onclick = () => { mode = 'edit'; render(); };
-  $('#tabGroup').onclick = () => { mode = 'group'; render(); };
+  $('#tabEdit').onclick = () => { mode = 'edit'; closeMenu(); render(); };
+  $('#tabGroup').onclick = () => { mode = 'group'; closeMenu(); render(); };
+  $('#tabHang').onclick = () => { mode = 'hangouts'; closeMenu(); render(); };
   $('#prev').onclick = () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } render(); };
   $('#next').onclick = () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } render(); };
   $('#brushes').addEventListener('click', e => {
