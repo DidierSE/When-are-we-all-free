@@ -70,6 +70,7 @@
       <input type="text" id="name" placeholder="Your name" maxlength="30" autocomplete="off">
       <button class="primary" id="saveName">Save name</button>
     </div>
+    <p class="muted" id="status" style="margin:8px 0 0"></p>
   </div>
 
   <div class="card">
@@ -116,6 +117,54 @@
 
 <script>
 (() => {
+  // ====== LIVE SYNC SETUP: paste your Firebase Realtime Database URL between the quotes ======
+  // Example: 'https://my-friends-default-rtdb.europe-west1.firebasedatabase.app'
+  const FIREBASE_URL = '';
+  // Everyone using the same room name shares one calendar. Change it if you want a private one.
+  const ROOM = new URLSearchParams(location.search).get('room') || 'our-group';
+  // ==========================================================================================
+  const CLOUD = !!FIREBASE_URL;
+  let cloudPeople = {};
+  let pushT;
+  const cKey = n => n.replace(/[.$#\[\]\/]/g, '_');
+  const cUrl = p => FIREBASE_URL.replace(/\/$/, '') + '/rooms/' + encodeURIComponent(ROOM) + p + '.json';
+  function setStatus(ok) {
+    const el = document.getElementById('status'); if (!el) return;
+    el.textContent = !CLOUD ? '⚠️ Live sync is not set up yet, so changes are only on this device.'
+      : ok ? '🟢 Live: everyone\'s changes show up automatically.'
+      : '🔴 Can\'t reach the shared calendar right now. Retrying...';
+  }
+  async function cloudPull() {
+    try {
+      const r = await fetch(cUrl('/people'), {cache: 'no-store'});
+      if (!r.ok) throw 0;
+      const j = (await r.json()) || {};
+      const out = {};
+      for (const v of Object.values(j)) if (v && v.n) out[v.n] = v.d ? String(v.d).split(',').filter(Boolean) : [];
+      cloudPeople = out; setStatus(true); render();
+    } catch (e) { setStatus(false); }
+  }
+  function cloudPush() {
+    if (!CLOUD || !state.me) return;
+    clearTimeout(pushT);
+    pushT = setTimeout(async () => {
+      try {
+        const days = [...mine()].filter(d => d >= TODAY).sort().join(',');
+        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(state.me))), {method: 'PUT', body: JSON.stringify({n: state.me, d: days})});
+        setStatus(r.ok);
+      } catch (e) { setStatus(false); }
+    }, 400);
+  }
+  function cloudStart() {
+    cloudPull();
+    try {
+      const es = new EventSource(cUrl('/people'));
+      es.addEventListener('put', cloudPull);
+      es.addEventListener('patch', cloudPull);
+    } catch (e) {}
+    setInterval(cloudPull, 20000);
+  }
+
   const KEY = 'whenfree.v1';
   const $ = s => document.querySelector(s);
   const esc = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -129,7 +178,7 @@
   let state = {me: '', people: {}};          // saved in this browser
   let repoPeople = {};                        // loaded from data.json (shared via the repo)
   try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.people) state = s; } catch (e) {}
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} cloudPush(); };
 
   let mode = 'edit';
   let view = {y: now.getFullYear(), m: now.getMonth()};
@@ -140,7 +189,10 @@
   const everyone = () => {
     const out = {};
     for (const [n, d] of Object.entries(repoPeople)) out[n] = new Set(d);
-    for (const [n, d] of Object.entries(state.people)) out[n] = new Set(d);
+    for (const [n, d] of Object.entries(cloudPeople)) out[n] = new Set(d);
+    for (const [n, d] of Object.entries(state.people)) {
+      if (!CLOUD || n === state.me) out[n] = new Set(d);   // with live sync, only my own days come from this device
+    }
     return out;
   };
   const mine = () => new Set(state.people[state.me] || []);
@@ -299,7 +351,9 @@
     const n = $('#name').value.trim().slice(0, 30);
     if (!n) { toast('Type your name first'); return; }
     if (n !== state.me && state.people[n]) { toast('That name is already in the group'); return; }
-    if (state.me && state.people[state.me]) { state.people[n] = state.people[state.me]; delete state.people[state.me]; }
+    const old = state.me;
+    if (old && state.people[old]) { state.people[n] = state.people[old]; delete state.people[old]; }
+    if (CLOUD && old && old !== n) fetch(cUrl('/people/' + encodeURIComponent(cKey(old))), {method: 'DELETE'}).catch(() => {});
     state.me = n; if (!state.people[n]) state.people[n] = [];
     save(); render(); toast(`Hi ${n}! Now tap the days you're free.`);
   };
@@ -359,7 +413,9 @@
       importFrom(location.hash);
       history.replaceState(null, '', location.pathname + location.search);
     }
+    if (CLOUD) cloudStart(); else setStatus(null);
     render();
+    if (state.me) cloudPush();
     if (!state.me) toast('Start by entering your name 👋');
   }
   init();
