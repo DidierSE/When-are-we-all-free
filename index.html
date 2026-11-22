@@ -61,9 +61,6 @@
   .muted{color:var(--muted);font-size:.9rem}
   .detail{margin-top:12px}
   .detail .g{margin-top:6px}
-  .detail .plan{margin-top:10px}
-  .setrow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:12px}
-  .setrow button.cur{border-color:var(--accent);font-weight:700;background:color-mix(in srgb,var(--accent) 14%,var(--card))}
   span.n{display:inline-block;margin:2px 6px 2px 0;padding:2px 10px;border-radius:999px;font-size:.85rem}
   .n.f{background:color-mix(in srgb,var(--free) 28%,var(--card))}
   .n.m{background:color-mix(in srgb,var(--maybe) 32%,var(--card))}
@@ -102,6 +99,20 @@
   details.bulk summary{cursor:pointer;color:var(--muted);font-size:.9rem}
   details.bulk .row{margin-top:8px}
   .sect{margin:20px 0 8px;font-size:1rem}
+  #help{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(0,0,0,.5)}
+  #help .box{background:var(--card);border:1px solid var(--line);border-radius:18px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,.3)}
+  #help .hh{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 8px}
+  #help .hh h2{margin:0;font-size:1.2rem}
+  #help .hb{overflow:auto;padding:4px 18px 8px;-webkit-overflow-scrolling:touch}
+  #help .hb h4{margin:16px 0 4px;font-size:1rem}
+  #help .hb p,#help .hb li{margin:4px 0;font-size:.93rem;line-height:1.5}
+  #help .hb ul{margin:4px 0;padding-left:20px}
+  #help .hf{padding:10px 18px 16px;text-align:right}
+  .sw{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:4px}
+  .day.hasnote::after{content:'';position:absolute;left:30%;right:30%;bottom:3px;height:3px;border-radius:2px;background:var(--accent)}
+  .note{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;background:var(--card)}
+  .note .ntext{white-space:pre-wrap;margin:4px 0}
+  .note .nbtns{display:flex;gap:6px;margin-top:6px}
   @media (max-width:480px){ .tabs button{font-size:.78rem;padding:8px 2px} }
   /* profile */
   .pblk{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
@@ -125,7 +136,8 @@
 
   <div class="card hide" id="authView">
     <h2 style="margin:0 0 4px;font-size:1.2rem">👋 Welcome</h2>
-    <p class="muted" style="margin:0 0 14px">Log in to see the calendar, or sign up if you're new.</p>
+    <p class="muted" style="margin:0 0 10px">Log in to see the calendar, or sign up if you're new.</p>
+    <button class="small" id="helpBtn2" style="margin-bottom:14px">❓ How to use</button>
     <p class="muted hide" id="authLoading">Connecting to the calendar...</p>
     <div id="authBox">
       <div class="tabs">
@@ -152,7 +164,7 @@
   </div>
 
   <div class="card app hide">
-    <b id="whoBar"></b>
+    <div class="row" style="justify-content:space-between"><b id="whoBar"></b><button class="small" id="helpBtn">❓ How to use</button></div>
     <p class="muted" id="status" style="margin:6px 0 0"></p>
   </div>
 
@@ -178,9 +190,28 @@
         <span><i style="background:var(--hang)"></i>Hangout 🎉</span>
         <span>❓2 = two not sure</span>
         <span>Small ? / ✕ = your own mark</span>
+        <span><i style="background:var(--accent);height:3px;vertical-align:2px"></i>Has a note</span>
         <span>Days nobody marks count as free</span>
       </div>
       <div id="detail" class="detail"></div>
+      <div id="noteForm" class="hform hide" style="margin-top:12px">
+        <h3 id="nfTitle">Add a note</h3>
+        <label>Note
+          <textarea id="nfText" rows="2" maxlength="200" placeholder="e.g. Abroad, back on the 5th · Free after 6pm · Can only do mornings"></textarea>
+        </label>
+        <div class="row2">
+          <label>From <input type="date" id="nfFrom"></label>
+          <label>To (optional, for a range) <input type="date" id="nfTo"></label>
+        </div>
+        <div class="row">
+          <button class="primary" id="nfSave">Save note</button>
+          <button id="nfCancel">Cancel</button>
+        </div>
+      </div>
+      <details class="bulk" id="notesAll">
+        <summary id="notesSum">📝 All notes</summary>
+        <div id="notesList"></div>
+      </details>
       <details class="bulk">
         <summary>More tools</summary>
         <div class="row">
@@ -263,6 +294,72 @@
   </div>
 </div>
 <div id="toast"></div>
+<div id="help" class="hide" role="dialog" aria-modal="true" aria-label="How to use">
+  <div class="box">
+    <div class="hh"><h2>❓ How to use</h2><button class="small" id="helpX" aria-label="Close">✕</button></div>
+    <div class="hb">
+      <p>This calendar helps the group find days when <b>everyone is free</b>, then lock in a plan.</p>
+
+      <h4>1. Log in</h4>
+      <ul>
+        <li><b>First time?</b> Open <b>Sign up</b>, type your name and a password (twice).</li>
+        <li><b>Been here before?</b> Open <b>Log in</b>, select your name, enter your password.</li>
+        <li>Your device remembers you until you <b>Log out</b> (Profile tab).</li>
+      </ul>
+
+      <h4>2. Read the calendar</h4>
+      <p>Every day is coloured for the whole group:</p>
+      <ul>
+        <li><span class="sw" style="background:color-mix(in srgb,var(--gold) 55%,var(--cell))"></span><b>Gold ⭐</b> everyone is free</li>
+        <li><span class="sw" style="background:var(--free)"></span><b>Green</b> more people free</li>
+        <li><span class="sw" style="background:var(--busy)"></span><b>Red</b> more people busy</li>
+        <li><span class="sw" style="background:var(--hang)"></span><b>Purple 🎉</b> a hangout is confirmed</li>
+        <li><b>3/5</b> = 3 of 5 people are free. <b>❓2</b> = two people aren't sure.</li>
+        <li>A small <b>?</b> or <b>✕</b> badge is <i>your own</i> mark. A <b style="color:var(--accent)">blue bar</b> means the day has a note.</li>
+      </ul>
+      <p><b>Days nobody marks count as free</b>, so you only need to mark the days you can't do.</p>
+
+      <h4>3. Tap a day</h4>
+      <p>A menu pops up with:</p>
+      <ul>
+        <li>✅ <b>Free</b>, ❓ <b>Not sure</b> or ❌ <b>Busy</b>: your status for that day</li>
+        <li>📝 <b>Add note</b>: write something about that day</li>
+        <li>🎉 <b>Plan hangout</b>: start a confirmed plan on that day</li>
+      </ul>
+      <p>The panel under the calendar shows who is free, not sure or busy that day, plus any notes and hangouts.</p>
+
+      <h4>4. Notes 📝</h4>
+      <ul>
+        <li>Use <b>From</b> and <b>To</b> for a stretch of days, like "Abroad, back on the 5th". Leave <b>To</b> empty for one day.</li>
+        <li>Write anything: "Free after 6pm", "Can only do mornings".</li>
+        <li>You can add several notes to the same day. Everyone sees them, but only you can edit or delete yours.</li>
+        <li>Open <b>All notes</b> under the calendar to see them in one list.</li>
+      </ul>
+
+      <h4>5. Best dates</h4>
+      <p>Under the calendar. It lists the days everyone is free, plus days that could work if the "not sure" people say yes. Tap one to jump to it.</p>
+
+      <h4>6. Hangouts tab 🎉</h4>
+      <p>Write down the plan once you've agreed: what, when, where and notes. Each hangout shows who wrote it and who edited it last. Anyone can edit or delete a hangout.</p>
+
+      <h4>7. Profile tab 👤</h4>
+      <ul>
+        <li>Change your <b>name</b> (your days, notes and hangouts move with it).</li>
+        <li>Change your <b>password</b>: type your old one, then the new one twice.</li>
+        <li><b>Copy invite link</b> to send the group link to a friend.</li>
+        <li><b>Log out</b> on this device.</li>
+      </ul>
+
+      <h4>Handy extras</h4>
+      <ul>
+        <li><b>More tools</b> under the calendar can mark every weekend of the month at once, or clear your marks for the month.</li>
+        <li>Changes show up for everyone automatically. The line at the top says 🟢 Live when it's connected.</li>
+        <li>Forgot your password? Ask whoever set up the app. They can reset it in a minute.</li>
+      </ul>
+    </div>
+    <div class="hf"><button class="primary" id="helpClose">Got it</button></div>
+  </div>
+</div>
 <div id="modal" role="dialog" aria-modal="true">
   <div class="box">
     <h3 id="modalTitle"></h3>
@@ -305,6 +402,9 @@
   let me = '';              // the name picked on this device
   let people = {};          // name -> {f: free days, m: not sure days, b: busy days}
   let hangouts = {};        // id -> {id, title, date, time, place, notes, by, at, editedBy, editedAt}
+  let notes = {};           // id -> {id, text, from, to, by, at, editedAt}  (to = last day, same as from for one day)
+  let pendingN = {};        // note changes not yet confirmed by the database
+  let noteOpen = false, editingNote = null;
   let pendingH = {};        // hangout changes not yet confirmed by the database (id -> hangout, or null = deleted)
   let loaded = !CLOUD;      // true once the shared calendar has been read
   let dirty = false, pushT = null, ver = 0;
@@ -316,9 +416,9 @@
 
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s) { me = s.me || ''; tok = s.tok || ''; if (!CLOUD) { people = s.people || {}; hangouts = s.hangouts || {}; } }
+    if (s) { me = s.me || ''; tok = s.tok || ''; if (!CLOUD) { people = s.people || {}; hangouts = s.hangouts || {}; notes = s.notes || {}; } }
   } catch (e) {}
-  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify({me, tok, people: CLOUD ? {} : people, hangouts: CLOUD ? {} : hangouts})); } catch (e) {} };
+  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify({me, tok, people: CLOUD ? {} : people, hangouts: CLOUD ? {} : hangouts, notes: CLOUD ? {} : notes})); } catch (e) {} };
 
   function toast(msg) {
     const t = $('#toast'); t.textContent = msg; t.classList.add('show');
@@ -389,12 +489,17 @@
           notes: v.notes || '', by: v.by || '', at: +v.at || 0, editedBy: v.editedBy || '', editedAt: +v.editedAt || 0};
       }
       for (const [id, h] of Object.entries(pendingH)) { if (h) hout[id] = h; else delete hout[id]; }   // keep my unsent changes
+      const nout = {};
+      for (const v of Object.values(root.notes || {})) {
+        if (v && v.id && v.from && v.text) nout[v.id] = {id: v.id, text: v.text, from: v.from, to: v.to || v.from, by: v.by || '', at: +v.at || 0, editedAt: +v.editedAt || 0};
+      }
+      for (const [id, n] of Object.entries(pendingN)) { if (n) nout[id] = n; else delete nout[id]; }
       if (dirty && me && people[me]) out[me] = {...people[me], pw: out[me] ? out[me].pw : people[me].pw};   // keep my edits that are still being sent
       if (me && !out[me]) { me = ''; tok = ''; saveLocal(); }   // my name was removed from the group
       else if (me && out[me].pw && out[me].pw.h !== tok) {      // password was set or changed somewhere else
         me = ''; tok = ''; saveLocal(); toast('You were logged out because the password changed. Please log in again.');
       }
-      people = out; hangouts = hout; loaded = true; setStatus(true); render();
+      people = out; hangouts = hout; notes = nout; loaded = true; setStatus(true); render();
     } catch (e) { setStatus(false); }
   }
   function cloudPush() {
@@ -434,7 +539,29 @@
       setStatus(r.ok);
     } catch (e) { setStatus(false); }
   }
-  function retryPending() { for (const [id, h] of Object.entries(pendingH)) { if (h) hangPut(h); else hangDel(id); } }
+  async function notePut(n) {
+    if (!CLOUD) { saveLocal(); return; }
+    pendingN[n.id] = n;
+    try {
+      const r = await fetch(cUrl('/notes/' + n.id), {method: 'PUT', body: JSON.stringify(n)});
+      if (r.ok && pendingN[n.id] === n) delete pendingN[n.id];
+      setStatus(r.ok);
+    } catch (e) { setStatus(false); }
+  }
+  async function noteDel(id) {
+    delete notes[id];
+    if (!CLOUD) { saveLocal(); return; }
+    pendingN[id] = null;
+    try {
+      const r = await fetch(cUrl('/notes/' + id), {method: 'DELETE'});
+      if (r.ok && pendingN[id] === null) delete pendingN[id];
+      setStatus(r.ok);
+    } catch (e) { setStatus(false); }
+  }
+  function retryPending() {
+    for (const [id, h] of Object.entries(pendingH)) { if (h) hangPut(h); else hangDel(id); }
+    for (const [id, n] of Object.entries(pendingN)) { if (n) notePut(n); else noteDel(id); }
+  }
   let pullT = null, stale = false, lastPull = 0;
   function pullSoon() {                           // the database said something changed
     if (document.hidden) { stale = true; return; }   // nobody is looking: refresh when the tab comes back
@@ -505,16 +632,18 @@
   // ---------- pop-up menu (Free / Not sure / Busy / Clear) ----------
   let menuEl = null;
   function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
-  function openMenu(anchor, title, current, onPick) {
+  function openMenu(anchor, title, current, onPick, extras, onExtra) {
     closeMenu();
     const items = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
     const m = document.createElement('div');
     m.className = 'menu';
     m.innerHTML = `<div class="t">${esc(title)}</div>` + items.map(([k, t]) =>
-      `<button data-k="${k}" class="${(k === 'f' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('');
+      `<button data-k="${k}" class="${(k === 'f' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('')
+      + (extras || []).map(([k, t]) => `<button data-k="${k}">${t}</button>`).join('');
     m.addEventListener('click', e => {
       const b = e.target.closest('button[data-k]'); if (!b) return;
       const k = b.dataset.k; closeMenu();
+      if ((extras || []).some(x => x[0] === k)) { onExtra(k); return; }
       onPick(k === 'f' ? null : k);
     });
     document.body.appendChild(m);
@@ -582,6 +711,7 @@
       if (past) cls.push('past');
       if (iso === TODAY) cls.push('today');
       if (hang) cls.push('hang');
+      if (Object.values(notes).some(n => n.from <= iso && iso <= n.to)) cls.push('hasnote');
       if (all && !hang) cls.push('all');
       if (iso === selected) cls.push('sel');
       let style = '', inner = '';
@@ -615,6 +745,7 @@
     $('#tabProf').classList.toggle('on', mode === 'profile');
     $('#hangForm').classList.toggle('hide', !formOpen);
     renderDetail(ix, names);
+    renderNotes();
     renderHangouts(ix, names);
     renderBest(ix, names);
     renderPeople(ix, names);
@@ -645,9 +776,17 @@
     return parts.join(' ');
   }
 
+  const noteHtml = n => `<div class="note">
+      <div>📝 <b>${esc(n.by || 'someone')}</b> · ${n.from === n.to ? label(n.from) : `${label(n.from)} → ${label(n.to)}`}</div>
+      <div class="ntext">${esc(n.text)}</div>
+      ${n.editedAt ? `<div class="muted" style="font-size:.8rem">edited ${fmt(n.editedAt)}</div>` : ''}
+      ${n.by === me ? `<div class="nbtns"><button class="small" data-nedit="${esc(n.id)}">✏️ Edit</button><button class="small" data-ndel="${esc(n.id)}">🗑 Delete</button></div>` : ''}
+    </div>`;
+  const noteSort = (a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : a.at - b.at);
+
   function renderDetail(ix, names) {
     const el = $('#detail');
-    if (!selected) { el.innerHTML = '<span class="muted">Tap a day to see who is free and to set your own status.</span>'; return; }
+    if (!selected) { el.innerHTML = '<span class="muted">Tap a day to set your status, add a note or plan a hangout. Who is free shows up here.</span>'; return; }
     let html = `<b>${label(selected)}</b>`;
     for (const [k, title] of [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']]) {
       const list = k === 'f' ? names.filter(n => isFree(ix, n, selected)) : names.filter(n => ix[n][k].has(selected));
@@ -655,16 +794,18 @@
     }
     const everyone = names.length >= 2 && names.every(n => isFree(ix, n, selected));
     const here = Object.values(hangouts).filter(h => h.date === selected);
-    if (everyone && selected >= TODAY && !here.length) html += '<div class="g">⭐ Everyone is free this day!</div>';
+    if (everyone && selected >= TODAY && !here.length) html += '<div class="g">⭐ Everyone is free this day! Tap the day to plan a hangout.</div>';
     for (const h of here) html += `<div class="g">🎉 <b>${esc(h.title)}</b> is planned this day</div>`;
-    if (selected >= TODAY) {
-      const cur = me ? stat(me, selected) : null;
-      html += `<div class="setrow"><span class="muted">Your status:</span>`
-        + [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']].map(([k, t]) =>
-          `<button class="small ${(k === 'f' ? cur === null : cur === k) ? 'cur' : ''}" data-set="${k}">${t}</button>`).join('') + '</div>';
-      html += `<div class="plan"><button class="small ${everyone && !here.length ? 'primary' : ''}" data-plan="${selected}">🎉 Plan a hangout on this day</button></div>`;
-    }
+    const dayNotes = Object.values(notes).filter(n => n.from <= selected && selected <= n.to).sort(noteSort);
+    html += dayNotes.map(noteHtml).join('');
     el.innerHTML = html;
+  }
+
+  function renderNotes() {
+    $('#noteForm').classList.toggle('hide', !noteOpen);
+    const up = Object.values(notes).filter(n => n.to >= TODAY).sort(noteSort);
+    $('#notesSum').textContent = `📝 All notes (${up.length})`;
+    $('#notesList').innerHTML = up.length ? up.map(noteHtml).join('') : '<p class="muted" style="margin:8px 0 0">No notes yet. Tap a day and choose Add note.</p>';
   }
 
   function renderHangouts(ix, names) {
@@ -736,9 +877,18 @@
   // ---------- tapping a day ----------
   $('#grid').addEventListener('click', e => {
     const el = e.target.closest('.day[data-iso]'); if (!el) return;
-    selected = el.dataset.iso; render();
-    $('#detail').scrollIntoView({block: 'nearest', behavior: 'smooth'});
+    const iso = el.dataset.iso;
+    selected = iso; render();
+    if (iso < TODAY || !canEdit()) return;                      // past days: just look
+    const cellNow = [...d_grid().querySelectorAll('.day[data-iso]')].find(x => x.dataset.iso === iso) || el;
+    const ix = index(), names = Object.keys(ix);
+    const free = names.filter(n => isFree(ix, n, iso)).length;
+    openMenu(cellNow, `${label(iso)}${names.length ? ` · ${free}/${names.length} free` : ''}`, stat(me, iso),
+      st => { if (setDay(iso, st)) { persist(); render(); } },
+      [['note', '📝 Add note'], ['hang', '🎉 Plan hangout']],
+      k => { if (k === 'note') openNoteForm(null, iso); else openHangForm(null, iso); });
   });
+  const d_grid = () => $('#grid');
 
   // ---------- hangouts ----------
   function openHangForm(h, date) {
@@ -791,11 +941,51 @@
       if (ok) { hangDel(h.id); render(); toast('Hangout deleted'); }
     }
   });
-  $('#detail').addEventListener('click', e => {
-    const p = e.target.closest('[data-plan]');
-    if (p) { openHangForm(null, p.dataset.plan); return; }
-    const s = e.target.closest('[data-set]');
-    if (s && selected && setDay(selected, s.dataset.set === 'f' ? null : s.dataset.set)) { persist(); render(); }   // edit without leaving Group view
+  // ---------- notes ----------
+  function openNoteForm(n, date) {
+    if (!canEdit()) return;
+    editingNote = n ? n.id : null;
+    $('#nfTitle').textContent = n ? 'Edit note' : 'Add a note';
+    $('#nfText').value = n ? n.text : '';
+    $('#nfFrom').value = n ? n.from : (date || '');
+    $('#nfTo').value = n && n.to !== n.from ? n.to : '';
+    noteOpen = true; mode = 'cal'; render();
+    $('#noteForm').scrollIntoView({behavior: 'smooth', block: 'center'});
+    $('#nfText').focus();
+  }
+  $('#nfCancel').onclick = () => { noteOpen = false; editingNote = null; render(); };
+  $('#nfSave').onclick = () => {
+    if (!canEdit()) return;
+    const text = $('#nfText').value.trim(), from = $('#nfFrom').value;
+    let to = $('#nfTo').value || from;
+    if (!text) { toast('Write your note first 👆'); $('#nfText').focus(); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from)) { toast('Pick the date the note starts'); return; }
+    if (to < from) { toast("The end date can't be before the start date"); return; }
+    if ((new Date(to) - new Date(from)) / 864e5 > 366) { toast('A note can cover at most a year'); return; }
+    const t = Date.now();
+    let n;
+    if (editingNote && notes[editingNote]) {
+      const old = notes[editingNote];
+      if (old.by !== me) { toast('You can only edit your own notes'); return; }
+      if (old.text === text && old.from === from && old.to === to) { noteOpen = false; editingNote = null; render(); toast('No changes made'); return; }
+      n = {...old, text, from, to, editedAt: t};
+    } else {
+      n = {id: t.toString(36) + Math.random().toString(36).slice(2, 6), text, from, to, by: me, at: t, editedAt: 0};
+    }
+    notes[n.id] = n; notePut(n);
+    selected = from; view = {y: +from.slice(0, 4), m: +from.slice(5, 7) - 1};
+    noteOpen = false; editingNote = null; render(); toast('Note saved 📝');
+  };
+  $('#calView').addEventListener('click', async e => {
+    const ed = e.target.closest('[data-nedit]');
+    if (ed) { const n = notes[ed.dataset.nedit]; if (n && n.by === me) openNoteForm(n); return; }
+    const del = e.target.closest('[data-ndel]');
+    if (del) {
+      const n = notes[del.dataset.ndel]; if (!n || n.by !== me) return;
+      const ok = await showModal({title: 'Delete note?', msg: `Delete this note for everyone? "${n.text.slice(0, 60)}"`,
+        buttons: [{label: 'Cancel', value: false}, {label: 'Delete', value: true, danger: true}]});
+      if (ok) { noteDel(n.id); render(); toast('Note deleted'); }
+    }
   });
 
   // ---------- controls ----------
@@ -828,6 +1018,9 @@
           const nh = {...h, by: h.by === old ? nn : h.by, editedBy: h.editedBy === old ? nn : h.editedBy};
           hangouts[h.id] = nh; hangPut(nh);
         }
+      }
+      for (const n of Object.values(notes)) {
+        if (n.by === old) { const nn2 = {...n, by: nn}; notes[n.id] = nn2; notePut(nn2); }
       }
       authSig = ''; toast(`Name changed to ${nn} ✅`);
     } catch (e) { toast("Couldn't change the name, try again"); }
@@ -927,6 +1120,7 @@
       }
       people[name] = {...empty(), pw: {h, s}}; tok = h; me = name;
       gotIn(`Welcome, ${me}! 🎉 Tap a day to mark it.`);
+      helpOnce();
     } catch (e) { toast("Couldn't create the account, try again"); }
     hold = false; render(); cloudPull();
   };
@@ -986,6 +1180,18 @@
     if (n === me) me = '';
     saveLocal(); render();
   });
+
+  // ---------- how to use ----------
+  const openHelp = () => { $('#help').classList.remove('hide'); $('#help .hb').scrollTop = 0; };
+  const closeHelp = () => { $('#help').classList.add('hide'); };
+  ['helpBtn', 'helpBtn2'].forEach(id => { $('#' + id).onclick = openHelp; });
+  $('#helpClose').onclick = closeHelp; $('#helpX').onclick = closeHelp;
+  $('#help').addEventListener('click', e => { if (e.target.id === 'help') closeHelp(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeHelp(); });
+  function helpOnce() {                                    // show the guide once on a new device after sign-up
+    try { if (localStorage.getItem('whenfree.helpSeen')) return; localStorage.setItem('whenfree.helpSeen', '1'); } catch (e) { return; }
+    openHelp();
+  }
 
   // ---------- startup ----------
   if (CLOUD && !ROOM) {
