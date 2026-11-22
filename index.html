@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>When Are We Free?</title>
 <style>
   :root{
@@ -33,7 +33,7 @@
   .nav h2{margin:0;font-size:1.15rem}
   .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;-webkit-user-select:none}
   .dow{text-align:center;color:var(--muted);font-size:.8rem;font-weight:600;padding:2px 0}
-  .day{position:relative;aspect-ratio:1/1;min-height:44px;border-radius:10px;background:var(--cell);padding:6px 7px;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid transparent}
+  .day{position:relative;min-height:58px;border-radius:10px;background:var(--cell);padding:6px 7px;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid transparent}
   .day.blank{background:transparent;cursor:default}
   .day.past{opacity:.38;cursor:not-allowed}
   .day.hang{background:color-mix(in srgb,var(--hang) 42%,var(--cell))}
@@ -43,7 +43,7 @@
   .day.sel{outline:3px solid var(--accent);outline-offset:1px}
   .mark{position:absolute;bottom:3px;right:6px;font-size:.95rem;font-weight:800}
   .count{position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:700;opacity:.85}
-  .qm{position:absolute;bottom:4px;left:6px;font-size:.65rem;font-weight:700}
+  .qm{position:absolute;bottom:17px;left:6px;font-size:.65rem;font-weight:700}
   .star,.hg{position:absolute;top:3px;right:5px;font-size:.8rem}
   .legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;margin-top:10px}
   .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:4px}
@@ -92,13 +92,36 @@
   #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:60}
   #toast.show{opacity:1}
   .hide{display:none!important}
-  .mine{position:absolute;top:5px;left:27px;width:15px;height:15px;border-radius:50%;font-size:.65rem;line-height:15px;text-align:center;font-weight:800;box-shadow:0 0 0 2px var(--card)}
+  .mine{position:absolute;top:23px;right:5px;width:15px;height:15px;border-radius:50%;font-size:.65rem;line-height:15px;text-align:center;font-weight:800;box-shadow:0 0 0 2px var(--card)}
   .mine.m-m{background:var(--maybe);color:#2b2200}
   .mine.m-b{background:var(--busy);color:#3a0707}
   details.bulk{margin-top:12px}
   details.bulk summary{cursor:pointer;color:var(--muted);font-size:.9rem}
   details.bulk .row{margin-top:8px}
   .sect{margin:20px 0 8px;font-size:1rem}
+  .day{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  @media (max-width:480px){
+    .wrap{padding:10px}
+    .card{padding:12px;border-radius:14px}
+    .grid{gap:4px}
+    .day{padding:4px 5px;font-size:.88rem;border-radius:8px}
+    .count{font-size:.62rem;right:4px;bottom:3px}
+    .qm{font-size:.6rem;left:4px;bottom:17px}
+    .star,.hg{top:3px;right:3px;font-size:.72rem}
+  }
+  .day.pick{outline:3px solid var(--accent);outline-offset:-3px;transform:scale(.94)}
+  .day.anchor{outline-style:dashed}
+  #selToggle.on{background:var(--accent);color:var(--accent-text);border-color:var(--accent);font-weight:600}
+  .selbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(0,0,0,.18);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+  .selbar>div{max-width:900px;margin-left:auto;margin-right:auto}
+  .selbar .selrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .selbar .selhelp{display:flex;gap:6px;flex-wrap:wrap}
+  .selbar .selhelp button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--card));font-weight:700}
+  .selbar .selact{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .selbar .selact button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;font-size:.72rem}
+  .selbar .selact button .ic{font-size:1.2rem;line-height:1}
+  body.selecting{padding-bottom:190px}
+  body.selecting #toast{bottom:200px}
   #help{position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(0,0,0,.5)}
   #help .box{background:var(--card);border:1px solid var(--line);border-radius:18px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,.3)}
   #help .hh{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 8px}
@@ -176,6 +199,10 @@
     </div>
 
     <div id="calView">
+      <div class="row" style="margin-bottom:10px">
+        <button id="selToggle">☑️ Select days</button>
+        <span class="muted" style="font-size:.85rem">to change several days at once</span>
+      </div>
       <div class="nav">
         <button id="prev" aria-label="Previous month">‹</button>
         <h2 id="monthLabel"></h2>
@@ -188,7 +215,7 @@
         <span><i style="background:var(--busy)"></i>More busy</span>
         <span>⭐ everyone free</span>
         <span><i style="background:var(--hang)"></i>Hangout 🎉</span>
-        <span>❓2 = two not sure</span>
+        <span>?2 / ✕1 = how many aren't sure / busy</span>
         <span>Small ? / ✕ = your own mark</span>
         <span><i style="background:var(--accent);height:3px;vertical-align:2px"></i>Has a note</span>
         <span>Days nobody marks count as free</span>
@@ -199,7 +226,7 @@
         <label>Note
           <textarea id="nfText" rows="2" maxlength="200" placeholder="e.g. Abroad, back on the 5th · Free after 6pm · Can only do mornings"></textarea>
         </label>
-        <div class="row2">
+        <div class="row2" id="nfDates">
           <label>From <input type="date" id="nfFrom"></label>
           <label>To (optional, for a range) <input type="date" id="nfTo"></label>
         </div>
@@ -211,13 +238,6 @@
       <details class="bulk" id="notesAll">
         <summary id="notesSum">📝 All notes</summary>
         <div id="notesList"></div>
-      </details>
-      <details class="bulk">
-        <summary>More tools</summary>
-        <div class="row">
-          <button class="small" id="weekends">All weekends this month…</button>
-          <button class="small" id="clearMonth">Clear this month</button>
-        </div>
       </details>
       <h3 class="sect">Best dates</h3>
       <div id="best"></div>
@@ -293,6 +313,26 @@
     </div>
   </div>
 </div>
+<div id="selBar" class="selbar hide">
+  <div>
+    <div class="selrow">
+      <b id="selCount">0 selected</b>
+      <span class="selhelp">
+        <button class="small" id="selRange">↔ Range</button>
+        <button class="small" id="selWk">Weekends</button>
+        <button class="small" id="selAll">All month</button>
+        <button class="small" id="selNone">Deselect</button>
+      </span>
+    </div>
+    <div class="selact">
+      <button data-selact="f"><span class="ic">✅</span>Free</button>
+      <button data-selact="m"><span class="ic">❓</span>Not sure</button>
+      <button data-selact="b"><span class="ic">❌</span>Busy</button>
+      <button data-selact="note"><span class="ic">📝</span>Note</button>
+      <button id="selCancel"><span class="ic">✕</span>Cancel</button>
+    </div>
+  </div>
+</div>
 <div id="toast"></div>
 <div id="help" class="hide" role="dialog" aria-modal="true" aria-label="How to use">
   <div class="box">
@@ -314,7 +354,7 @@
         <li><span class="sw" style="background:var(--free)"></span><b>Green</b> more people free</li>
         <li><span class="sw" style="background:var(--busy)"></span><b>Red</b> more people busy</li>
         <li><span class="sw" style="background:var(--hang)"></span><b>Purple 🎉</b> a hangout is confirmed</li>
-        <li><b>3/5</b> = 3 of 5 people are free. <b>❓2</b> = two people aren't sure.</li>
+        <li><b>3/5</b> = 3 of 5 people are free. <b>?2</b> and <b>✕1</b> = how many people aren't sure or are busy.</li>
         <li>A small <b>?</b> or <b>✕</b> badge is <i>your own</i> mark. A <b style="color:var(--accent)">blue bar</b> means the day has a note.</li>
       </ul>
       <p><b>Days nobody marks count as free</b>, so you only need to mark the days you can't do.</p>
@@ -327,6 +367,15 @@
         <li>🎉 <b>Plan hangout</b>: start a confirmed plan on that day</li>
       </ul>
       <p>The panel under the calendar shows who is free, not sure or busy that day, plus any notes and hangouts.</p>
+
+      <h4>Change several days at once</h4>
+      <ul>
+        <li>Tap <b>☑️ Select days</b> above the calendar, then tap each day you want. Tap a selected day again to unselect it.</li>
+        <li><b>↔ Range</b>: tap the first day, then the last day, and everything in between is selected (great for a holiday).</li>
+        <li><b>Weekends</b> and <b>All month</b> select those days in the month you're looking at. You can switch months and keep selecting.</li>
+        <li>Then use the bar at the bottom: <b>✅ Free</b>, <b>❓ Not sure</b>, <b>❌ Busy</b>, or <b>📝 Note</b> to write one note for all the selected days.</li>
+        <li>To plan a hangout, tap a single day instead and choose <b>🎉 Plan hangout</b>.</li>
+      </ul>
 
       <h4>4. Notes 📝</h4>
       <ul>
@@ -352,7 +401,6 @@
 
       <h4>Handy extras</h4>
       <ul>
-        <li><b>More tools</b> under the calendar can mark every weekend of the month at once, or clear your marks for the month.</li>
         <li>Changes show up for everyone automatically. The line at the top says 🟢 Live when it's connected.</li>
         <li>Forgot your password? Ask whoever set up the app. They can reset it in a minute.</li>
       </ul>
@@ -404,7 +452,8 @@
   let hangouts = {};        // id -> {id, title, date, time, place, notes, by, at, editedBy, editedAt}
   let notes = {};           // id -> {id, text, from, to, by, at, editedAt}  (to = last day, same as from for one day)
   let pendingN = {};        // note changes not yet confirmed by the database
-  let noteOpen = false, editingNote = null;
+  let noteOpen = false, editingNote = null, noteDays = null;   // noteDays = days picked for a multi-day note
+  let selMode = false, picked = new Set(), rangeMode = false, anchor = null;   // multi-select
   let pendingH = {};        // hangout changes not yet confirmed by the database (id -> hangout, or null = deleted)
   let loaded = !CLOUD;      // true once the shared calendar has been read
   let dirty = false, pushT = null, ver = 0;
@@ -713,7 +762,9 @@
       if (hang) cls.push('hang');
       if (Object.values(notes).some(n => n.from <= iso && iso <= n.to)) cls.push('hasnote');
       if (all && !hang) cls.push('all');
-      if (iso === selected) cls.push('sel');
+      if (iso === selected && !selMode) cls.push('sel');
+      if (selMode && picked.has(iso)) cls.push('pick');
+      if (selMode && iso === anchor) cls.push('anchor');
       let style = '', inner = '';
       // Colour by majority: gold = everyone free, green = more free, red = more busy, purple = hangout
       if (total && !hang && !past) {
@@ -728,8 +779,8 @@
       }
       if (hang) inner += '<span class="hg">🎉</span>';
       else if (all) inner += '<span class="star">⭐</span>';
-      if (total) inner += `<span class="count">${f}/${total}</span>`;
-      const side = [m ? '❓' + m : '', b && !hang ? '❌' + b : ''].filter(Boolean).join(' ');
+      if (total && !past) inner += `<span class="count">${f}/${total}</span>`;
+      const side = [m ? '?' + m : '', b && !hang ? '✕' + b : ''].filter(Boolean).join(' ');
       if (side) inner += `<span class="qm">${side}</span>`;
       const my = me && !past ? stat(me, iso) : null;
       if (my) inner += `<span class="mine m-${my}">${ICON[my]}</span>`;     // your own mark
@@ -751,6 +802,7 @@
     renderPeople(ix, names);
     renderProfile();
     renderAuth();
+    renderSel();
   }
 
   function renderProfile() {
@@ -878,6 +930,14 @@
   $('#grid').addEventListener('click', e => {
     const el = e.target.closest('.day[data-iso]'); if (!el) return;
     const iso = el.dataset.iso;
+    if (selMode) {                                              // multi-select: taps pick days, no menu
+      if (iso < TODAY) return;
+      if (rangeMode) {
+        if (!anchor) { anchor = iso; picked.add(iso); }
+        else { isoBetween(anchor, iso).filter(x => x >= TODAY).forEach(x => picked.add(x)); anchor = null; }
+      } else if (picked.has(iso)) picked.delete(iso); else picked.add(iso);
+      selected = iso; render(); return;
+    }
     selected = iso; render();
     if (iso < TODAY || !canEdit()) return;                      // past days: just look
     const cellNow = [...d_grid().querySelectorAll('.day[data-iso]')].find(x => x.dataset.iso === iso) || el;
@@ -941,10 +1001,54 @@
       if (ok) { hangDel(h.id); render(); toast('Hangout deleted'); }
     }
   });
+  // ---------- multi-select ----------
+  const addDay = (iso, n) => { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return isoOf(d.getFullYear(), d.getMonth(), d.getDate()); };
+  const isoBetween = (a, b) => { if (a > b) [a, b] = [b, a]; const out = []; for (let x = a; x <= b; x = addDay(x, 1)) out.push(x); return out; };
+  const monthDays = () => { const dim = new Date(view.y, view.m + 1, 0).getDate(); return Array.from({length: dim}, (_, i) => isoOf(view.y, view.m, i + 1)).filter(x => x >= TODAY); };
+  function exitSelect() { selMode = false; picked.clear(); rangeMode = false; anchor = null; }
+  function renderSel() {
+    const on = selMode && mode === 'cal' && !noteOpen;
+    $('#selBar').classList.toggle('hide', !on);
+    document.body.classList.toggle('selecting', on);
+    $('#selToggle').classList.toggle('on', selMode);
+    $('#selToggle').textContent = selMode ? '✕ Stop selecting' : '☑️ Select days';
+    $('#selRange').classList.toggle('on', rangeMode);
+    $('#selCount').textContent = rangeMode ? (anchor ? 'Now tap the last day' : 'Tap the first day') : `${picked.size} selected`;
+  }
+  function applySel(st) {
+    if (!picked.size) { toast('Tap some days first 👆'); return; }
+    if (!canEdit()) return;
+    const n = picked.size;
+    [...picked].forEach(iso => setDay(iso, st));
+    persist(); exitSelect(); render();
+    toast(`${n} day${n > 1 ? 's' : ''} marked ${st === null ? 'free' : st === 'm' ? 'not sure' : 'busy'}`);
+  }
+  $('#selToggle').onclick = () => { if (selMode) exitSelect(); else { selMode = true; closeMenu(); } render(); };
+  $('#selCancel').onclick = () => { exitSelect(); render(); };
+  $('#selRange').onclick = () => { rangeMode = !rangeMode; anchor = null; render(); };
+  $('#selWk').onclick = () => { monthDays().filter(x => [0, 6].includes(new Date(x + 'T00:00:00').getDay())).forEach(x => picked.add(x)); render(); };
+  $('#selAll').onclick = () => { monthDays().forEach(x => picked.add(x)); render(); };
+  $('#selNone').onclick = () => { picked.clear(); anchor = null; render(); };
+  $('#selBar').addEventListener('click', e => {
+    const b = e.target.closest('[data-selact]'); if (!b) return;
+    const k = b.dataset.selact;
+    if (k === 'note') openNoteFormMulti(); else applySel(k === 'f' ? null : k);
+  });
+
   // ---------- notes ----------
+  function openNoteFormMulti() {
+    if (!picked.size) { toast('Tap some days first 👆'); return; }
+    if (!canEdit()) return;
+    noteDays = [...picked].sort(); editingNote = null;
+    $('#nfTitle').textContent = `Add a note to ${noteDays.length} day${noteDays.length > 1 ? 's' : ''}`;
+    $('#nfText').value = ''; $('#nfDates').classList.add('hide');
+    noteOpen = true; render();
+    $('#noteForm').scrollIntoView({behavior: 'smooth', block: 'center'});
+    $('#nfText').focus();
+  }
   function openNoteForm(n, date) {
     if (!canEdit()) return;
-    editingNote = n ? n.id : null;
+    editingNote = n ? n.id : null; noteDays = null; $('#nfDates').classList.remove('hide');
     $('#nfTitle').textContent = n ? 'Edit note' : 'Add a note';
     $('#nfText').value = n ? n.text : '';
     $('#nfFrom').value = n ? n.from : (date || '');
@@ -953,9 +1057,24 @@
     $('#noteForm').scrollIntoView({behavior: 'smooth', block: 'center'});
     $('#nfText').focus();
   }
-  $('#nfCancel').onclick = () => { noteOpen = false; editingNote = null; render(); };
+  $('#nfCancel').onclick = () => { noteOpen = false; editingNote = null; noteDays = null; render(); };   // a multi-select stays as it was
   $('#nfSave').onclick = () => {
     if (!canEdit()) return;
+    if (noteDays) {                                             // one note per run of consecutive days
+      const text = $('#nfText').value.trim();
+      if (!text) { toast('Write your note first 👆'); $('#nfText').focus(); return; }
+      const runs = []; noteDays.forEach(x => { const last = runs.at(-1); if (last && addDay(last.at(-1), 1) === x) last.push(x); else runs.push([x]); });
+      const t = Date.now();
+      runs.forEach((r, i) => {
+        const n = {id: (t + i).toString(36) + Math.random().toString(36).slice(2, 6), text, from: r[0], to: r.at(-1), by: me, at: t + i, editedAt: 0};
+        notes[n.id] = n; notePut(n);
+      });
+      const first = noteDays[0], count = noteDays.length;
+      selected = first; view = {y: +first.slice(0, 4), m: +first.slice(5, 7) - 1};
+      noteDays = null; noteOpen = false; exitSelect(); render();
+      toast(`Note added to ${count} day${count > 1 ? 's' : ''} 📝`);
+      return;
+    }
     const text = $('#nfText').value.trim(), from = $('#nfFrom').value;
     let to = $('#nfTo').value || from;
     if (!text) { toast('Write your note first 👆'); $('#nfText').focus(); return; }
@@ -990,8 +1109,8 @@
 
   // ---------- controls ----------
   $('#tabCal').onclick = () => { mode = 'cal'; closeMenu(); render(); };
-  $('#tabHang').onclick = () => { mode = 'hangouts'; closeMenu(); render(); };
-  $('#tabProf').onclick = () => { mode = 'profile'; closeMenu(); $('#pfName').value = me; render(); };
+  $('#tabHang').onclick = () => { exitSelect(); mode = 'hangouts'; closeMenu(); render(); };
+  $('#tabProf').onclick = () => { exitSelect(); mode = 'profile'; closeMenu(); $('#pfName').value = me; render(); };
 
   // ---------- profile: rename, password, sign out ----------
   $('#pfRename').onclick = async () => {
@@ -1123,35 +1242,6 @@
       helpOnce();
     } catch (e) { toast("Couldn't create the account, try again"); }
     hold = false; render(); cloudPull();
-  };
-
-  $('#weekends').onclick = () => {
-    if (!canEdit()) return;
-    const apply = s => {
-      const dim = new Date(view.y, view.m + 1, 0).getDate();
-      for (let d = 1; d <= dim; d++) {
-        const dow = new Date(view.y, view.m, d).getDay();
-        if (dow === 0 || dow === 6) setDay(isoOf(view.y, view.m, d), s);
-      }
-      persist(); render();
-    };
-    openMenu($('#weekends'), 'All weekends this month', undefined, apply);
-  };
-  $('#clearMonth').onclick = async () => {
-    if (!me || !people[me]) return;
-    const monthName = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
-    const ok = await showModal({
-      title: 'Clear this month?',
-      msg: `Clear all your marks for ${monthName}? This can't be undone.`,
-      buttons: [
-        {label: 'Cancel', value: false},
-        {label: 'Clear marks', value: true, danger: true}
-      ]
-    });
-    if (!ok) return;
-    const prefix = isoOf(view.y, view.m, 1).slice(0, 7);
-    for (const k of KINDS) people[me][k] = people[me][k].filter(d => !d.startsWith(prefix));
-    persist(); render();
   };
 
   $('#best').addEventListener('click', e => {
