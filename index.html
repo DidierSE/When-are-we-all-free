@@ -20,7 +20,7 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .stack{display:flex;flex-direction:column;gap:8px}
-  input[type=text],input[type=date],input[type=time],select,textarea{flex:1;min-width:150px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
+  input[type=text],input[type=password],input[type=date],input[type=time],select,textarea{flex:1;min-width:150px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit}
   textarea{resize:vertical}
   button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 14px;border-radius:10px}
   button:hover{border-color:var(--accent)}
@@ -29,10 +29,6 @@
   .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
   .tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font-size:.9rem}
   .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-  .brushes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
-  .brushes button{padding:8px 2px;font-size:.72rem;border-width:2px;display:flex;flex-direction:column;align-items:center;gap:2px}
-  .brushes button .ic{font-size:1.15rem;line-height:1}
-  .brushes button.on{border-color:var(--accent);font-weight:700;background:color-mix(in srgb,var(--accent) 14%,var(--card))}
   .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
   .nav h2{margin:0;font-size:1.15rem}
   .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;-webkit-user-select:none}
@@ -41,9 +37,6 @@
   .day.blank{background:transparent;cursor:default}
   .day.past{opacity:.38;cursor:not-allowed}
   .day.hang{background:color-mix(in srgb,var(--hang) 42%,var(--cell))}
-  .day.s-f{background:var(--free);color:#06260f}
-  .day.s-m{background:var(--maybe);color:#2b2200}
-  .day.s-b{background:var(--busy);color:#3a0707}
   .day.today{border-color:var(--accent)}
   .day.hang{border-color:var(--hang)}
   .day.all{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
@@ -102,6 +95,17 @@
   #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:60}
   #toast.show{opacity:1}
   .hide{display:none!important}
+  .mine{position:absolute;top:5px;left:27px;width:15px;height:15px;border-radius:50%;font-size:.65rem;line-height:15px;text-align:center;font-weight:800;box-shadow:0 0 0 2px var(--card)}
+  .mine.m-m{background:var(--maybe);color:#2b2200}
+  .mine.m-b{background:var(--busy);color:#3a0707}
+  details.bulk{margin-top:12px}
+  details.bulk summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+  details.bulk .row{margin-top:8px}
+  .sect{margin:20px 0 8px;font-size:1rem}
+  @media (max-width:480px){ .tabs button{font-size:.78rem;padding:8px 2px} }
+  /* profile */
+  .pblk{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .pblk .stack{margin-bottom:4px}
   /* custom modal */
   #modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .18s}
   #modal.show{opacity:1;pointer-events:auto}
@@ -119,37 +123,47 @@
   <h1>📅 When are we all free?</h1>
   <p class="sub">Mark your days. Everyone sees the updates live and the app finds the days that work for all of us.</p>
 
-  <div class="card">
-    <div class="stack">
-      <div class="row" id="pickRow">
-        <select id="nameSel" aria-label="Who are you?"></select>
+  <div class="card hide" id="authView">
+    <h2 style="margin:0 0 4px;font-size:1.2rem">👋 Welcome</h2>
+    <p class="muted" style="margin:0 0 14px">Log in to see the calendar, or sign up if you're new.</p>
+    <p class="muted hide" id="authLoading">Connecting to the calendar...</p>
+    <div id="authBox">
+      <div class="tabs">
+        <button id="authTabIn" class="on">Log in</button>
+        <button id="authTabUp">Sign up</button>
       </div>
-      <div class="row hide" id="newRow">
-        <input type="text" id="name" placeholder="Type your name" maxlength="30" autocomplete="off">
-        <button class="primary" id="saveName">Save name</button>
+      <div class="stack" id="authIn">
+        <select id="liName" aria-label="Your name"></select>
+        <input type="password" id="liPw" placeholder="Password" autocomplete="current-password">
+        <div class="stack hide" id="liClaim">
+          <p class="muted" style="margin:0">This name has no password yet. Choose one to claim it.</p>
+          <input type="password" id="liNew" placeholder="Choose a password (at least 4 characters)" autocomplete="new-password">
+          <input type="password" id="liNew2" placeholder="Repeat password" autocomplete="new-password">
+        </div>
+        <button class="primary" id="liBtn">Log in</button>
+      </div>
+      <div class="stack hide" id="authUp">
+        <input type="text" id="suName" maxlength="30" placeholder="Your name" autocomplete="username">
+        <input type="password" id="suPw" placeholder="Choose a password (at least 4 characters)" autocomplete="new-password">
+        <input type="password" id="suPw2" placeholder="Repeat password" autocomplete="new-password">
+        <button class="primary" id="suBtn">Sign up</button>
       </div>
     </div>
-    <p class="muted" id="status" style="margin:8px 0 0"></p>
   </div>
 
-  <div class="card">
+  <div class="card app hide">
+    <b id="whoBar"></b>
+    <p class="muted" id="status" style="margin:6px 0 0"></p>
+  </div>
+
+  <div class="card app">
     <div class="tabs">
-      <button id="tabEdit" class="on">✏️ My days</button>
-      <button id="tabGroup">👥 Group view</button>
+      <button id="tabCal" class="on">📅 Calendar</button>
       <button id="tabHang">🎉 Hangouts</button>
+      <button id="tabProf">👤 Profile</button>
     </div>
 
     <div id="calView">
-      <div id="brushWrap">
-        <div class="brushes" id="brushes">
-          <button data-brush="menu" class="on"><span class="ic">👆</span>Menu</button>
-          <button data-brush="f"><span class="ic">✅</span>Free</button>
-          <button data-brush="m"><span class="ic">❓</span>Not sure</button>
-          <button data-brush="b"><span class="ic">❌</span>Busy</button>
-          <button data-brush="hang"><span class="ic">🎉</span>Hangout</button>
-        </div>
-      </div>
-
       <div class="nav">
         <button id="prev" aria-label="Previous month">‹</button>
         <h2 id="monthLabel"></h2>
@@ -157,27 +171,25 @@
       </div>
       <div class="grid" id="dows"></div>
       <div class="grid" id="grid" style="margin-top:6px"></div>
-
-      <div class="legend" id="legendEdit">
-        <span><i style="background:var(--free)"></i>Free</span>
-        <span><i style="background:var(--maybe)"></i>Not sure</span>
-        <span><i style="background:var(--busy)"></i>Busy</span>
-        <span><i style="background:var(--hang)"></i>Confirmed hangout 🎉</span>
-        <span>👆 Menu: tap a day and choose. Or pick a colour/Hangout button to mark days or plan a hangout with one tap. Days you don't mark count as free.</span>
+      <div class="legend">
+        <span><i style="background:var(--free)"></i>More free</span>
+        <span><i style="background:var(--busy)"></i>More busy</span>
+        <span>⭐ everyone free</span>
+        <span><i style="background:var(--hang)"></i>Hangout 🎉</span>
+        <span>❓2 = two not sure</span>
+        <span>Small ? / ✕ = your own mark</span>
+        <span>Days nobody marks count as free</span>
       </div>
-      <div class="legend hide" id="legendGroup">
-        <span><i style="background:var(--free)"></i>Greener = more free</span>
-        <span><i style="background:var(--busy)"></i>Redder = more busy</span>
-        <span>⭐ / gold = everyone free</span>
-        <span>❓2 = two people not sure</span>
-        <span>Unmarked days count as free</span>
-        <span><i style="background:var(--hang)"></i>Confirmed hangout 🎉</span>
-      </div>
-      <div class="row hide" id="quick" style="margin-top:12px">
-        <button class="small" id="weekends">All weekends this month…</button>
-        <button class="small" id="clearMonth">Clear this month</button>
-      </div>
-      <div id="detail" class="detail hide"></div>
+      <div id="detail" class="detail"></div>
+      <details class="bulk">
+        <summary>More tools</summary>
+        <div class="row">
+          <button class="small" id="weekends">All weekends this month…</button>
+          <button class="small" id="clearMonth">Clear this month</button>
+        </div>
+      </details>
+      <h3 class="sect">Best dates</h3>
+      <div id="best"></div>
     </div>
 
     <div id="hangView" class="hide">
@@ -207,16 +219,47 @@
       </div>
       <div id="hangList"></div>
     </div>
-  </div>
 
-  <div class="card">
-    <h3>Best dates</h3>
-    <div id="best"></div>
-  </div>
-
-  <div class="card">
-    <h3>The group</h3>
-    <div class="chips" id="people"></div>
+    <div id="profView" class="hide">
+      <p id="profNone" class="muted">Log in first.</p>
+      <div id="profMain">
+        <p id="profWho" style="margin:0 0 12px"></p>
+        <div class="pblk">
+          <h3>Change my name</h3>
+          <div class="row">
+            <input type="text" id="pfName" maxlength="30" placeholder="New name" autocomplete="off">
+            <button class="primary" id="pfRename">Save name</button>
+          </div>
+          <p class="muted" style="margin:8px 0 0">Your days and the hangouts you wrote move to the new name.</p>
+        </div>
+        <div class="pblk">
+          <h3>Password</h3>
+          <p class="muted" id="pfPwState" style="margin:0 0 10px"></p>
+          <div class="stack">
+            <input type="password" id="pfCur" placeholder="Current password" autocomplete="current-password">
+            <input type="password" id="pfNew" placeholder="New password (at least 4 characters)" autocomplete="new-password">
+            <input type="password" id="pfNew2" placeholder="Repeat new password" autocomplete="new-password">
+            <div class="row">
+              <button class="primary" id="pfSetPw">Set password</button>
+              <button id="pfRmPw">Remove password</button>
+            </div>
+          </div>
+          <p class="muted" style="margin:10px 0 0">With a password, nobody else can log in as you. It's a light lock for a friend group, not bank-level security, so don't reuse a password from anywhere important.</p>
+        </div>
+        <div class="pblk">
+          <h3>Invite a friend</h3>
+          <p class="muted" style="margin:0 0 10px">Copies the private link to this calendar. Only send it to people you trust.</p>
+          <button id="pfInvite">🔗 Copy invite link</button>
+        </div>
+        <div class="pblk">
+          <h3>Group members</h3>
+          <div class="chips" id="people"></div>
+        </div>
+        <div class="pblk">
+          <button id="pfOut">Log out</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div id="toast"></div>
@@ -224,6 +267,7 @@
   <div class="box">
     <h3 id="modalTitle"></h3>
     <p id="modalMsg"></p>
+    <input type="password" id="modalInput" class="hide" style="width:100%;min-width:0;margin-bottom:14px" autocomplete="off">
     <div class="mbtns" id="modalBtns"></div>
   </div>
 </div>
@@ -253,9 +297,9 @@
   const TODAY = isoOf(now.getFullYear(), now.getMonth(), now.getDate());
   const label = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
   const fmt = ms => new Date(ms).toLocaleString('en-GB', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-  const empty = () => ({f: [], m: [], b: []});
-  const KINDS = ['f', 'm', 'b'];
-  const ICON = {f: '✓', m: '?', b: '✕'};
+  const empty = () => ({m: [], b: [], pw: null});
+  const KINDS = ['m', 'b'];
+  const ICON = {m: '?', b: '✕'};
 
   // ---------- state ----------
   let me = '';              // the name picked on this device
@@ -264,16 +308,17 @@
   let pendingH = {};        // hangout changes not yet confirmed by the database (id -> hangout, or null = deleted)
   let loaded = !CLOUD;      // true once the shared calendar has been read
   let dirty = false, pushT = null, ver = 0;
-  let mode = 'edit', brush = 'menu', selected = null, newMode = false, nameSig = '';
+  let mode = 'cal', selected = null, authMode = 'in', authSig = '';
   let formOpen = false, editingId = null;
+  let tok = '';             // proof (the password hash) that this device signed in as a protected name
+  let hold = false;         // pause database refreshes while a rename / password change is being saved
   let view = {y: now.getFullYear(), m: now.getMonth()};
 
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s) { me = s.me || ''; if (!CLOUD) { people = s.people || {}; hangouts = s.hangouts || {}; } }
-    else { const o = JSON.parse(localStorage.getItem('whenfree.v1') || 'null'); if (o && o.me) me = o.me; }
+    if (s) { me = s.me || ''; tok = s.tok || ''; if (!CLOUD) { people = s.people || {}; hangouts = s.hangouts || {}; } }
   } catch (e) {}
-  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify({me, people: CLOUD ? {} : people, hangouts: CLOUD ? {} : hangouts})); } catch (e) {} };
+  const saveLocal = () => { try { localStorage.setItem(KEY, JSON.stringify({me, tok, people: CLOUD ? {} : people, hangouts: CLOUD ? {} : hangouts})); } catch (e) {} };
 
   function toast(msg) {
     const t = $('#toast'); t.textContent = msg; t.classList.add('show');
@@ -286,12 +331,14 @@
     $('#modal').classList.remove('show');
     if (modalResolve) { const r = modalResolve; modalResolve = null; r(false); }
   }
-  function showModal({title, msg, buttons}) {
+  function showModal({title, msg, buttons, input}) {
     return new Promise(resolve => {
       closeModal();
       modalResolve = resolve;
       $('#modalTitle').textContent = title || '';
       $('#modalMsg').textContent = msg || '';
+      $('#modalInput').value = '';
+      $('#modalInput').classList.toggle('hide', !input);          // password box (used for sign-in)
       const btns = $('#modalBtns');
       btns.innerHTML = '';
       (buttons || [{label: 'OK', value: true, primary: true}]).forEach(b => {
@@ -302,15 +349,17 @@
         el.onclick = () => {
           $('#modal').classList.remove('show');
           modalResolve = null;
-          resolve(b.value);
+          resolve(input && b.value === true ? $('#modalInput').value : b.value);
         };
         btns.appendChild(el);
       });
       $('#modal').classList.add('show');
+      if (input) setTimeout(() => $('#modalInput').focus(), 50);
     });
   }
   $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal').classList.contains('show')) closeModal(); });
+  $('#modalInput').addEventListener('keydown', e => { if (e.key === 'Enter') { const p = $('#modalBtns .primary'); if (p) p.click(); } });
 
   // ---------- shared database (Firebase Realtime Database over plain HTTPS) ----------
   const cKey = n => n.replace(/[.$#\[\]\/]/g, '_');
@@ -324,13 +373,15 @@
       : '🔴 Can\'t reach the shared calendar right now. Retrying...';
   }
   async function cloudPull() {
+    if (hold) return;
+    lastPull = Date.now();
     try {
       const r = await fetch(cUrl(''), {cache: 'no-store'});
       if (!r.ok) throw 0;
       const root = (await r.json()) || {};
       const out = {};
       for (const v of Object.values(root.people || {})) {
-        if (v && v.n) out[v.n] = {f: parse(v.f !== undefined ? v.f : v.d), m: parse(v.m), b: parse(v.b)};
+        if (v && v.n) out[v.n] = {m: parse(v.m), b: parse(v.b), pw: v.h ? {h: v.h, s: v.s || ''} : null};
       }
       const hout = {};
       for (const v of Object.values(root.hangouts || {})) {
@@ -338,8 +389,11 @@
           notes: v.notes || '', by: v.by || '', at: +v.at || 0, editedBy: v.editedBy || '', editedAt: +v.editedAt || 0};
       }
       for (const [id, h] of Object.entries(pendingH)) { if (h) hout[id] = h; else delete hout[id]; }   // keep my unsent changes
-      if (dirty && me && people[me]) out[me] = people[me];   // don't overwrite my edits that are still being sent
-      if (me && !out[me]) { me = ''; saveLocal(); }          // my name was removed from the group
+      if (dirty && me && people[me]) out[me] = {...people[me], pw: out[me] ? out[me].pw : people[me].pw};   // keep my edits that are still being sent
+      if (me && !out[me]) { me = ''; tok = ''; saveLocal(); }   // my name was removed from the group
+      else if (me && out[me].pw && out[me].pw.h !== tok) {      // password was set or changed somewhere else
+        me = ''; tok = ''; saveLocal(); toast('You were logged out because the password changed. Please log in again.');
+      }
       people = out; hangouts = hout; loaded = true; setStatus(true); render();
     } catch (e) { setStatus(false); }
   }
@@ -351,7 +405,8 @@
       const p = people[me]; if (!p) return;
       const keep = k => p[k].filter(d => d >= TODAY).join(',');
       try {
-        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(me))), {method: 'PUT', body: JSON.stringify({n: me, f: '', m: keep('m'), b: keep('b')})});
+        // PATCH (not PUT) so the saved password fields are never overwritten by a day update
+        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(me))), {method: 'PATCH', body: JSON.stringify({n: me, m: keep('m'), b: keep('b')})});
         if (r.ok && v === ver) dirty = false;
         setStatus(r.ok);
       } catch (e) { setStatus(false); }
@@ -380,34 +435,62 @@
     } catch (e) { setStatus(false); }
   }
   function retryPending() { for (const [id, h] of Object.entries(pendingH)) { if (h) hangPut(h); else hangDel(id); } }
+  let pullT = null, stale = false, lastPull = 0;
+  function pullSoon() {                           // the database said something changed
+    if (document.hidden) { stale = true; return; }   // nobody is looking: refresh when the tab comes back
+    clearTimeout(pullT); pullT = setTimeout(cloudPull, 300);
+  }
   function cloudStart() {
     cloudPull();
     try {
       const es = new EventSource(cUrl(''));
-      es.addEventListener('put', cloudPull);
-      es.addEventListener('patch', cloudPull);
+      let first = true;                            // the first event is just the snapshot we already pulled
+      const onEvt = () => { if (first) { first = false; return; } pullSoon(); };
+      es.addEventListener('put', onEvt);
+      es.addEventListener('patch', onEvt);
     } catch (e) {}
-    setInterval(cloudPull, 20000);
-    setInterval(retryPending, 20000);
+    setInterval(() => { if (!document.hidden) cloudPull(); }, 180000);   // slow safety net only
+    setInterval(retryPending, 30000);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && (stale || Date.now() - lastPull > 60000)) { stale = false; cloudPull(); }
+    });
   }
   const persist = () => { saveLocal(); cloudPush(); };
+
+  // ---------- passwords (salted PBKDF2 hash; the password itself is never stored or sent) ----------
+  const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  const newSalt = () => hex(crypto.getRandomValues(new Uint8Array(16)));
+  async function hashPw(pw, salt) {
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+    return hex(await crypto.subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode(salt), iterations: 100000}, key, 256));
+  }
+  async function checkPw(name, pw) {
+    const p = people[name] && people[name].pw; if (!p) return true;
+    try { return (await hashPw(pw, p.s)) === p.h; }
+    catch (e) { toast('Passwords need a secure (https) page'); return false; }
+  }
+  async function askPw(title, msg) {
+    const v = await showModal({title, msg, input: true, buttons: [{label: 'Cancel', value: false}, {label: 'Continue', value: true, primary: true}]});
+    return v || null;
+  }
+  const cPatch = (name, obj) => fetch(cUrl('/people/' + encodeURIComponent(cKey(name))), {method: 'PATCH', body: JSON.stringify(obj)});
 
   // ---------- helpers ----------
   function index() {
     const out = {};
-    for (const [n, p] of Object.entries(people)) out[n] = {f: new Set(p.f), m: new Set(p.m), b: new Set(p.b)};
+    for (const [n, p] of Object.entries(people)) out[n] = {m: new Set(p.m), b: new Set(p.b)};
     return out;
   }
   const stat = (name, iso) => {
     const p = people[name]; if (!p) return null;
     return p.m.includes(iso) ? 'm' : p.b.includes(iso) ? 'b' : null;   // free = nothing marked
   };
-  const brushVal = () => (brush === 'f' || brush === 'menu' || brush === 'hang') ? null : brush;   // "Free" simply removes any mark
-  // A day someone left unmarked counts as free for them.
+    // A day someone left unmarked counts as free for them.
   const isFree = (ix, n, iso) => !ix[n].m.has(iso) && !ix[n].b.has(iso);
 
   function canEdit() {
-    if (!me) { toast('Pick your name first 👆'); return false; }
+    if (!me) { toast('Log in first 👆'); return false; }
     if (!loaded) { toast('Still connecting, try again in a second'); return false; }
     return true;
   }
@@ -422,18 +505,16 @@
   // ---------- pop-up menu (Free / Not sure / Busy / Clear) ----------
   let menuEl = null;
   function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
-  function openMenu(anchor, title, current, onPick, onHang) {
+  function openMenu(anchor, title, current, onPick) {
     closeMenu();
     const items = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
     const m = document.createElement('div');
     m.className = 'menu';
     m.innerHTML = `<div class="t">${esc(title)}</div>` + items.map(([k, t]) =>
-      `<button data-k="${k}" class="${(k === 'f' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('')
-      + (onHang ? '<button data-k="hang">🎉 Group Hangout</button>' : '');
+      `<button data-k="${k}" class="${(k === 'f' ? current === null : current === k) ? 'cur' : ''}">${t}</button>`).join('');
     m.addEventListener('click', e => {
       const b = e.target.closest('button[data-k]'); if (!b) return;
       const k = b.dataset.k; closeMenu();
-      if (k === 'hang') { onHang(); return; }
       onPick(k === 'f' ? null : k);
     });
     document.body.appendChild(m);
@@ -450,17 +531,34 @@
   window.addEventListener('resize', closeMenu);
 
   // ---------- rendering ----------
-  function renderNameUI(names) {
-    const showNew = newMode || names.length === 0;
-    $('#pickRow').classList.toggle('hide', names.length === 0);
-    $('#newRow').classList.toggle('hide', !showNew);
-    const sig = names.join('|') + '#' + me + '#' + showNew;
-    if (sig === nameSig) return;                 // don't rebuild (and close) the dropdown for no reason
-    nameSig = sig;
-    $('#nameSel').innerHTML =
-      `<option value="" disabled ${!me && !showNew ? 'selected' : ''}>Who are you? Pick your name</option>`
-      + names.map(n => `<option value="${esc(n)}" ${n === me && !showNew ? 'selected' : ''}>${esc(n)}</option>`).join('')
-      + `<option value="__new" ${showNew ? 'selected' : ''}>➕ I'm not on the list</option>`;
+  // ---------- login / sign-up screen ----------
+  function renderAuth() {
+    const authed = !!me;
+    document.querySelectorAll('.app').forEach(el => el.classList.toggle('hide', !authed));
+    $('#authView').classList.toggle('hide', authed);
+    $('#whoBar').textContent = me ? `👤 Logged in as ${me}` : '';
+    if (authed) return;
+    $('#authLoading').classList.toggle('hide', loaded);
+    $('#authBox').classList.toggle('hide', !loaded);
+    if (!loaded) return;
+    const names = Object.keys(people).sort((a, b) => a.localeCompare(b));
+    if (!names.length) authMode = 'up';                        // nobody has signed up yet
+    $('#authTabIn').classList.toggle('on', authMode === 'in');
+    $('#authTabUp').classList.toggle('on', authMode === 'up');
+    $('#authTabIn').disabled = !names.length;
+    $('#authIn').classList.toggle('hide', authMode !== 'in');
+    $('#authUp').classList.toggle('hide', authMode !== 'up');
+    const sig = names.map(n => n + (people[n].pw ? '*' : '')).join('|');
+    if (sig !== authSig) {                                      // rebuild the list only when it changed
+      authSig = sig;
+      const cur = $('#liName').value;
+      $('#liName').innerHTML = '<option value="" disabled>Select your name</option>'
+        + names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      $('#liName').value = names.includes(cur) ? cur : '';
+    }
+    const n = $('#liName').value, legacy = !!(n && people[n] && !people[n].pw);
+    $('#liPw').classList.toggle('hide', legacy);
+    $('#liClaim').classList.toggle('hide', !legacy);
   }
 
   function render() {
@@ -475,64 +573,66 @@
     for (let i = 0; i < lead; i++) html += '<div class="day blank"></div>';
     for (let d = 1; d <= dim; d++) {
       const iso = isoOf(view.y, view.m, d);
-      const past = iso < TODAY;
+      const past = iso < TODAY, hang = hdays.has(iso);
+      const f = names.filter(n => isFree(ix, n, iso)).length;
+      const m = names.filter(n => ix[n].m.has(iso)).length;
+      const b = names.filter(n => ix[n].b.has(iso)).length;
+      const all = total >= 2 && f === total && !past;
       const cls = ['day'];
       if (past) cls.push('past');
       if (iso === TODAY) cls.push('today');
-      const hang = hdays.has(iso);
       if (hang) cls.push('hang');
+      if (all && !hang) cls.push('all');
+      if (iso === selected) cls.push('sel');
       let style = '', inner = '';
-      if (mode === 'edit') {
-        const s = stat(me, iso);
-        if (s) { cls.push('s-' + s); inner = `<span class="mark">${ICON[s]}</span>`; }
-        else if (me && !past && !hang) cls.push('s-f');          // unmarked = free, shown green
-        if (hang) inner += '<span class="hg">🎉</span>';
-      } else {
-        const f = names.filter(n => isFree(ix, n, iso)).length;
-        const m = names.filter(n => ix[n].m.has(iso)).length;
-        const b = names.filter(n => ix[n].b.has(iso)).length;
-        if (iso === selected) cls.push('sel');
-        const all = total >= 2 && f === total && !past;
-        if (all && !hang) cls.push('all');
-        // Colour by majority: green when more free, red when more busy, gold handled by .all
-        if (total && !hang && !past) {
-          if (all) {
-            style = `style="background:color-mix(in srgb,var(--gold) 55%,var(--cell));color:#2b1a00"`;
-          } else if (f >= b && f > 0) {
-            const pct = Math.round(20 + (f / total) * 70);
-            style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .5 ? 'color:#06260f' : ''}"`;
-          } else if (b > f) {
-            const pct = Math.round(20 + (b / total) * 70);
-            style = `style="background:color-mix(in srgb,var(--busy) ${pct}%,var(--cell));${b / total > .5 ? 'color:#3a0707' : ''}"`;
-          }
+      // Colour by majority: gold = everyone free, green = more free, red = more busy, purple = hangout
+      if (total && !hang && !past) {
+        if (all) style = `style="background:color-mix(in srgb,var(--gold) 55%,var(--cell));color:#2b1a00"`;
+        else if (f >= b && f > 0) {
+          const pct = Math.round(20 + (f / total) * 70);
+          style = `style="background:color-mix(in srgb,var(--free) ${pct}%,var(--cell));${f / total > .5 ? 'color:#06260f' : ''}"`;
+        } else if (b > f) {
+          const pct = Math.round(20 + (b / total) * 70);
+          style = `style="background:color-mix(in srgb,var(--busy) ${pct}%,var(--cell));${b / total > .5 ? 'color:#3a0707' : ''}"`;
         }
-        if (hang) inner += '<span class="hg">🎉</span>';
-        else if (all) inner += '<span class="star">⭐</span>';
-        if (total) inner += `<span class="count">${f}/${total}</span>`;
-        const side = [m ? '❓' + m : '', b && !hang ? '❌' + b : ''].filter(Boolean).join(' ');
-        if (side) inner += `<span class="qm">${side}</span>`;
       }
+      if (hang) inner += '<span class="hg">🎉</span>';
+      else if (all) inner += '<span class="star">⭐</span>';
+      if (total) inner += `<span class="count">${f}/${total}</span>`;
+      const side = [m ? '❓' + m : '', b && !hang ? '❌' + b : ''].filter(Boolean).join(' ');
+      if (side) inner += `<span class="qm">${side}</span>`;
+      const my = me && !past ? stat(me, iso) : null;
+      if (my) inner += `<span class="mine m-${my}">${ICON[my]}</span>`;     // your own mark
       html += `<div class="${cls.join(' ')}" data-iso="${iso}" ${style}>${d}${inner}</div>`;
     }
     $('#grid').innerHTML = html;
 
-    const cal = mode !== 'hangouts';
-    $('#calView').classList.toggle('hide', !cal);
-    $('#hangView').classList.toggle('hide', cal);
-    $('#tabEdit').classList.toggle('on', mode === 'edit');
-    $('#tabGroup').classList.toggle('on', mode === 'group');
+    $('#calView').classList.toggle('hide', mode !== 'cal');
+    $('#hangView').classList.toggle('hide', mode !== 'hangouts');
+    $('#profView').classList.toggle('hide', mode !== 'profile');
+    $('#tabCal').classList.toggle('on', mode === 'cal');
     $('#tabHang').classList.toggle('on', mode === 'hangouts');
-    $('#brushWrap').classList.toggle('hide', mode !== 'edit');
-    $('#legendEdit').classList.toggle('hide', mode !== 'edit');
-    $('#legendGroup').classList.toggle('hide', mode !== 'group');
-    $('#quick').classList.toggle('hide', mode !== 'edit');
+    $('#tabProf').classList.toggle('on', mode === 'profile');
     $('#hangForm').classList.toggle('hide', !formOpen);
-    document.querySelectorAll('#brushes button').forEach(b => b.classList.toggle('on', b.dataset.brush === brush));
-    renderNameUI(names);
     renderDetail(ix, names);
     renderHangouts(ix, names);
     renderBest(ix, names);
     renderPeople(ix, names);
+    renderProfile();
+    renderAuth();
+  }
+
+  function renderProfile() {
+    if (mode !== 'profile') return;
+    const p = me && people[me];
+    $('#profMain').classList.toggle('hide', !p);
+    $('#profNone').classList.toggle('hide', !!p);
+    if (!p) return;
+    $('#profWho').textContent = `Signed in as ${me}`;
+    $('#pfPwState').textContent = p.pw ? '🔒 This name is protected by a password.' : '🔓 No password yet. Anyone could log in as you, so set one below.';
+    $('#pfCur').classList.toggle('hide', !p.pw);
+    $('#pfRmPw').classList.toggle('hide', !p.pw);
+    $('#pfSetPw').textContent = p.pw ? 'Change password' : 'Set password';
   }
 
   const chipOf = (ix, n, k, iso) => `<span class="n ${k}">${esc(n)}</span>`;
@@ -547,23 +647,22 @@
 
   function renderDetail(ix, names) {
     const el = $('#detail');
-    if (mode !== 'group') { el.classList.add('hide'); return; }
-    el.classList.remove('hide');
-    if (!selected) { el.innerHTML = '<span class="muted">Tap a day to see who is free.</span>'; return; }
-    const groups = [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']];
+    if (!selected) { el.innerHTML = '<span class="muted">Tap a day to see who is free and to set your own status.</span>'; return; }
     let html = `<b>${label(selected)}</b>`;
-    for (const [k, title] of groups) {
+    for (const [k, title] of [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']]) {
       const list = k === 'f' ? names.filter(n => isFree(ix, n, selected)) : names.filter(n => ix[n][k].has(selected));
       if (list.length) html += `<div class="g">${title}: ${list.map(n => chipOf(ix, n, k, selected)).join('')}</div>`;
     }
+    const everyone = names.length >= 2 && names.every(n => isFree(ix, n, selected));
     const here = Object.values(hangouts).filter(h => h.date === selected);
+    if (everyone && selected >= TODAY && !here.length) html += '<div class="g">⭐ Everyone is free this day!</div>';
     for (const h of here) html += `<div class="g">🎉 <b>${esc(h.title)}</b> is planned this day</div>`;
     if (selected >= TODAY) {
       const cur = me ? stat(me, selected) : null;
-      html += `<div class="setrow"><span class="muted">Your status${me ? '' : ' (pick your name first)'}:</span>`
+      html += `<div class="setrow"><span class="muted">Your status:</span>`
         + [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']].map(([k, t]) =>
           `<button class="small ${(k === 'f' ? cur === null : cur === k) ? 'cur' : ''}" data-set="${k}">${t}</button>`).join('') + '</div>';
-      html += `<div class="plan"><button class="small" data-plan="${selected}">🎉 Plan a hangout on this day</button></div>`;
+      html += `<div class="plan"><button class="small ${everyone && !here.length ? 'primary' : ''}" data-plan="${selected}">🎉 Plan a hangout on this day</button></div>`;
     }
     el.innerHTML = html;
   }
@@ -630,49 +729,15 @@
   function renderPeople(ix, names) {
     const el = $('#people');
     if (!names.length) { el.innerHTML = '<span class="muted">Nobody yet.</span>'; return; }
-    el.innerHTML = names.map(n => {
-      const cnt = [...ix[n].m, ...ix[n].b].filter(d => d >= TODAY).length;
-      return `<span class="chip"><b>${esc(n)}${n === me ? ' (you)' : ''}</b><span class="muted">${cnt} days marked</span>`
-        + `<button data-rm="${esc(n)}" title="Remove">✕</button></span>`;
-    }).join('');
+    el.innerHTML = names.map(n =>
+      `<span class="chip"><b>${esc(n)}${n === me ? ' (you)' : ''}</b>${people[n] && people[n].pw ? '<span class="muted">🔒</span>' : ''}<button data-rm="${esc(n)}" title="Remove">✕</button></span>`).join('');
   }
 
   // ---------- tapping a day ----------
-  $('#grid').addEventListener('click', async e => {
+  $('#grid').addEventListener('click', e => {
     const el = e.target.closest('.day[data-iso]'); if (!el) return;
-    const iso = el.dataset.iso;
-    if (mode === 'group') {
-      selected = iso;
-      render();
-      // Suggest hangout when everyone is free and no hangout yet
-      const ix = index(), names = Object.keys(ix);
-      const total = names.length;
-      const f = names.filter(n => isFree(ix, n, iso)).length;
-      const hasHang = Object.values(hangouts).some(h => h.date === iso);
-      if (total >= 2 && f === total && iso >= TODAY && !hasHang) {
-        const ok = await showModal({
-          title: 'Everyone is free ⭐',
-          msg: `${label(iso)} works for everyone. Plan a hangout?`,
-          buttons: [
-            {label: 'Not now', value: false},
-            {label: '🎉 Plan hangout', value: true, primary: true}
-          ]
-        });
-        if (ok) openHangForm(null, iso);
-      }
-      return;
-    }
-    if (iso < TODAY || !canEdit()) return;
-    if (brush === 'menu') {
-      openMenu(el, label(iso), stat(me, iso), s => { if (setDay(iso, s)) { persist(); render(); } },
-        () => openHangForm(null, iso));
-      return;
-    }
-    if (brush === 'hang') {
-      openHangForm(null, iso);
-      return;
-    }
-    if (setDay(iso, stat(me, iso) === brushVal() ? null : brushVal())) { persist(); render(); }
+    selected = el.dataset.iso; render();
+    $('#detail').scrollIntoView({block: 'nearest', behavior: 'smooth'});
   });
 
   // ---------- hangouts ----------
@@ -734,35 +799,137 @@
   });
 
   // ---------- controls ----------
-  $('#tabEdit').onclick = () => { mode = 'edit'; closeMenu(); render(); };
-  $('#tabGroup').onclick = () => { mode = 'group'; closeMenu(); render(); };
+  $('#tabCal').onclick = () => { mode = 'cal'; closeMenu(); render(); };
   $('#tabHang').onclick = () => { mode = 'hangouts'; closeMenu(); render(); };
+  $('#tabProf').onclick = () => { mode = 'profile'; closeMenu(); $('#pfName').value = me; render(); };
+
+  // ---------- profile: rename, password, sign out ----------
+  $('#pfRename').onclick = async () => {
+    if (!canEdit()) return;
+    const nn = $('#pfName').value.trim().slice(0, 30), old = me;
+    if (!nn) { toast('Type a new name first'); return; }
+    if (nn === old) { toast('That is already your name'); return; }
+    const clash = Object.keys(people).some(n => n !== old && cKey(n).toLowerCase() === cKey(nn).toLowerCase());
+    if (clash) { toast('Someone in the group already has that name'); return; }
+    hold = true;
+    try {
+      const rec = people[old];
+      if (CLOUD) {
+        const body = {n: nn, m: rec.m.filter(d => d >= TODAY).join(','), b: rec.b.filter(d => d >= TODAY).join(',')};
+        if (rec.pw) { body.h = rec.pw.h; body.s = rec.pw.s; }
+        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(nn))), {method: 'PUT', body: JSON.stringify(body)});
+        if (!r.ok) throw 0;
+        if (cKey(old) !== cKey(nn)) await fetch(cUrl('/people/' + encodeURIComponent(cKey(old))), {method: 'DELETE'});
+      }
+      people[nn] = rec; if (old !== nn) delete people[old];
+      me = nn; saveLocal();
+      for (const h of Object.values(hangouts)) {      // hangouts keep showing the right author
+        if (h.by === old || h.editedBy === old) {
+          const nh = {...h, by: h.by === old ? nn : h.by, editedBy: h.editedBy === old ? nn : h.editedBy};
+          hangouts[h.id] = nh; hangPut(nh);
+        }
+      }
+      authSig = ''; toast(`Name changed to ${nn} ✅`);
+    } catch (e) { toast("Couldn't change the name, try again"); }
+    hold = false; render(); cloudPull();
+  };
+
+  const clearPwFields = () => { $('#pfCur').value = ''; $('#pfNew').value = ''; $('#pfNew2').value = ''; };
+  $('#pfSetPw').onclick = async () => {
+    if (!canEdit()) return;
+    const p = people[me], cur = $('#pfCur').value, n1 = $('#pfNew').value, n2 = $('#pfNew2').value;
+    if (p.pw && !(await checkPw(me, cur))) { toast('Current password is wrong'); return; }
+    if (n1.length < 4) { toast('Use at least 4 characters'); return; }
+    if (n1 !== n2) { toast("The two new passwords don't match"); return; }
+    let h, s;
+    try { s = newSalt(); h = await hashPw(n1, s); } catch (e) { toast('Passwords need a secure (https) page'); return; }
+    hold = true;
+    try {
+      if (CLOUD) { const r = await cPatch(me, {n: me, h, s}); if (!r.ok) throw 0; }
+      p.pw = {h, s}; tok = h; saveLocal(); clearPwFields(); authSig = '';
+      toast('Password saved 🔒');
+    } catch (e) { toast("Couldn't save the password, try again"); }
+    hold = false; render(); cloudPull();
+  };
+  $('#pfRmPw').onclick = async () => {
+    if (!canEdit()) return;
+    const p = people[me];
+    if (!p.pw) { toast('No password to remove'); return; }
+    if (!(await checkPw(me, $('#pfCur').value))) { toast('Current password is wrong'); return; }
+    hold = true;
+    try {
+      if (CLOUD) { const r = await cPatch(me, {h: null, s: null}); if (!r.ok) throw 0; }
+      p.pw = null; tok = ''; saveLocal(); clearPwFields(); authSig = '';
+      toast('Password removed 🔓');
+    } catch (e) { toast("Couldn't remove the password, try again"); }
+    hold = false; render(); cloudPull();
+  };
+  $('#pfInvite').onclick = async () => {
+    const link = location.origin + location.pathname + '?room=' + encodeURIComponent(ROOM);
+    try { await navigator.clipboard.writeText(link); toast('Invite link copied! Send it to your friends 🔗'); }
+    catch (e) { showModal({title: 'Invite link', msg: link, buttons: [{label: 'Close', value: true, primary: true}]}); }
+  };
+  $('#pfOut').onclick = () => { me = ''; tok = ''; authSig = ''; authMode = 'in'; saveLocal(); clearAuthFields(); mode = 'cal'; render(); toast('Logged out on this device'); };
   $('#prev').onclick = () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } render(); };
   $('#next').onclick = () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } render(); };
-  $('#brushes').addEventListener('click', e => {
-    const b = e.target.closest('button[data-brush]'); if (!b) return;
-    brush = b.dataset.brush; render();
+  // ---------- log in / sign up ----------
+  const clearAuthFields = () => ['liPw', 'liNew', 'liNew2', 'suName', 'suPw', 'suPw2'].forEach(id => { $('#' + id).value = ''; });
+  const gotIn = msg => { saveLocal(); clearAuthFields(); mode = 'cal'; authSig = ''; render(); toast(msg); };
+
+  $('#authTabIn').onclick = () => { authMode = 'in'; renderAuth(); };
+  $('#authTabUp').onclick = () => { authMode = 'up'; renderAuth(); };
+  $('#liName').addEventListener('change', renderAuth);
+  $('#authView').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') (authMode === 'in' ? $('#liBtn') : $('#suBtn')).click();
   });
 
-  $('#nameSel').addEventListener('change', e => {
-    const v = e.target.value;
-    if (v === '__new') { newMode = true; nameSig = ''; render(); $('#name').focus(); return; }
-    newMode = false; me = v; saveLocal(); render();
-    toast(`Hi ${me}! Tap a day to mark it.`);
-  });
-  $('#saveName').onclick = () => {
-    const raw = $('#name').value.trim().slice(0, 30);
-    if (!raw) { toast('Type your name first'); return; }
-    if (CLOUD && !loaded) { toast('Still connecting, try again in a second'); return; }
-    const existing = Object.keys(people).find(n => n.toLowerCase() === raw.toLowerCase());
-    let created = false;
-    if (existing) { me = existing; toast(`${existing} is already in the group, so you're signed in as ${existing}.`); }
-    else { people[raw] = empty(); me = raw; created = true; toast(`Hi ${me}! Tap a day to mark it.`); }
-    newMode = false; nameSig = ''; $('#name').value = '';
-    saveLocal(); if (created) cloudPush();
-    render();
+  $('#liBtn').onclick = async () => {
+    const n = $('#liName').value;
+    if (!n || !people[n]) { toast('Select your name from the list'); return; }
+    const p = people[n];
+    if (p.pw) {
+      const pw = $('#liPw').value;
+      if (!pw) { toast('Enter your password'); return; }
+      if (!(await checkPw(n, pw))) { toast('Wrong password'); return; }
+      tok = p.pw.h; me = n;
+      gotIn(`Welcome back, ${me}! 👋`);
+      return;
+    }
+    // older account without a password: claim it by choosing one
+    const n1 = $('#liNew').value, n2 = $('#liNew2').value;
+    if (n1.length < 4) { toast('Use at least 4 characters'); return; }
+    if (n1 !== n2) { toast("The two passwords don't match"); return; }
+    let h, s;
+    try { s = newSalt(); h = await hashPw(n1, s); } catch (e) { toast('Passwords need a secure (https) page'); return; }
+    hold = true;
+    try {
+      if (CLOUD) { const r = await cPatch(n, {n, h, s}); if (!r.ok) throw 0; }
+      p.pw = {h, s}; tok = h; me = n;
+      gotIn(`Welcome, ${me}! Your password is set 🔒`);
+    } catch (e) { toast("Couldn't save the password, try again"); }
+    hold = false; render(); cloudPull();
   };
-  $('#name').addEventListener('keydown', e => { if (e.key === 'Enter') $('#saveName').click(); });
+
+  $('#suBtn').onclick = async () => {
+    if (CLOUD && !loaded) { toast('Still connecting, try again in a second'); return; }
+    const name = $('#suName').value.trim().slice(0, 30), p1 = $('#suPw').value, p2 = $('#suPw2').value;
+    if (!name) { toast('Type your name first'); return; }
+    if (Object.keys(people).some(n => cKey(n).toLowerCase() === cKey(name).toLowerCase())) { toast('That name is taken. Log in instead, or pick another name.'); return; }
+    if (p1.length < 4) { toast('Use at least 4 characters'); return; }
+    if (p1 !== p2) { toast("The two passwords don't match"); return; }
+    let h, s;
+    try { s = newSalt(); h = await hashPw(p1, s); } catch (e) { toast('Passwords need a secure (https) page'); return; }
+    hold = true;
+    try {
+      if (CLOUD) {
+        const r = await fetch(cUrl('/people/' + encodeURIComponent(cKey(name))), {method: 'PUT', body: JSON.stringify({n: name, m: '', b: '', h, s})});
+        if (!r.ok) throw 0;
+      }
+      people[name] = {...empty(), pw: {h, s}}; tok = h; me = name;
+      gotIn(`Welcome, ${me}! 🎉 Tap a day to mark it.`);
+    } catch (e) { toast("Couldn't create the account, try again"); }
+    hold = false; render(); cloudPull();
+  };
 
   $('#weekends').onclick = () => {
     if (!canEdit()) return;
@@ -774,8 +941,7 @@
       }
       persist(); render();
     };
-    if (brush === 'menu' || brush === 'hang') openMenu($('#weekends'), 'All weekends this month', undefined, apply);
-    else apply(brushVal());
+    openMenu($('#weekends'), 'All weekends this month', undefined, apply);
   };
   $('#clearMonth').onclick = async () => {
     if (!me || !people[me]) return;
@@ -797,7 +963,7 @@
   $('#best').addEventListener('click', e => {
     const el = e.target.closest('[data-jump]'); if (!el) return;
     const [y, m] = el.dataset.jump.split('-').map(Number);
-    view = {y, m: m - 1}; selected = el.dataset.jump; mode = 'group'; render();
+    view = {y, m: m - 1}; selected = el.dataset.jump; mode = 'cal'; render();
     $('#grid').scrollIntoView({behavior: 'smooth', block: 'center'});
   });
   $('#people').addEventListener('click', async e => {
@@ -812,6 +978,10 @@
       ]
     });
     if (!ok) return;
+    if (people[n] && people[n].pw && n !== me) {       // removing someone with a password needs their password
+      const pw = await askPw(`Password for ${n}`, `${n} is protected. Enter their password to remove them.`);
+      if (!pw || !(await checkPw(n, pw))) { toast('Wrong password'); return; }
+    }
     delete people[n]; cloudDelete(n);
     if (n === me) me = '';
     saveLocal(); render();
@@ -827,7 +997,6 @@
   setStatus(CLOUD ? true : null);
   if (CLOUD) { $('#status').textContent = 'Connecting...'; cloudStart(); }
   render();
-  if (!me) toast('Start by picking your name 👋');
 })();
 </script>
 </body>
