@@ -31,9 +31,9 @@
   .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
   .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
   .nav h2{margin:0;font-size:1.15rem}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;-webkit-user-select:none}
+  .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;user-select:none;-webkit-user-select:none}
   .dow{text-align:center;color:var(--muted);font-size:.8rem;font-weight:600;padding:2px 0}
-  .day{position:relative;min-height:58px;border-radius:10px;background:var(--cell);padding:6px 7px;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid transparent}
+  .day{position:relative;aspect-ratio:1/1;border-radius:10px;background:var(--cell);padding:5px 6px 7px;font-weight:600;font-size:1rem;cursor:pointer;border:2px solid transparent;display:flex;flex-direction:column;justify-content:space-between}
   .day.blank{background:transparent;cursor:default}
   .day.past{opacity:.38;cursor:not-allowed}
   .day.hang{background:color-mix(in srgb,var(--hang) 42%,var(--cell))}
@@ -41,10 +41,10 @@
   .day.hang{border-color:var(--hang)}
   .day.all{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
   .day.sel{outline:3px solid var(--accent);outline-offset:1px}
-  .mark{position:absolute;bottom:3px;right:6px;font-size:.95rem;font-weight:800}
-  .count{position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:700;opacity:.85}
-  .qm{position:absolute;bottom:17px;left:6px;font-size:.65rem;font-weight:700}
-  .star,.hg{position:absolute;top:3px;right:5px;font-size:.8rem}
+
+  .count{font-size:.68rem;font-weight:700;opacity:.85;margin-left:auto;white-space:nowrap}
+  .qm{font-size:.62rem;font-weight:700;white-space:nowrap;margin-left:auto}
+  .star,.hg{font-size:.8rem;line-height:1}
   .legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;margin-top:10px}
   .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:4px}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -92,22 +92,26 @@
   #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:60}
   #toast.show{opacity:1}
   .hide{display:none!important}
-  .mine{position:absolute;top:23px;right:5px;width:15px;height:15px;border-radius:50%;font-size:.65rem;line-height:15px;text-align:center;font-weight:800;box-shadow:0 0 0 2px var(--card)}
+  .mine{width:15px;height:15px;border-radius:50%;font-size:.65rem;line-height:15px;text-align:center;font-weight:800;box-shadow:0 0 0 2px var(--card)}
   .mine.m-m{background:var(--maybe);color:#2b2200}
   .mine.m-b{background:var(--busy);color:#3a0707}
   details.bulk{margin-top:12px}
   details.bulk summary{cursor:pointer;color:var(--muted);font-size:.9rem}
   details.bulk .row{margin-top:8px}
   .sect{margin:20px 0 8px;font-size:1rem}
+  .grid,.nav{max-width:620px;margin-left:auto;margin-right:auto}
+  .dtop{display:flex;justify-content:space-between;align-items:flex-start;gap:2px;line-height:1.1}
+  .dmid{flex:1;display:flex;align-items:center;justify-content:space-between;gap:2px;min-height:0}
+  .dbot{display:flex;justify-content:flex-end;align-items:flex-end;gap:2px;line-height:1.1;min-height:10px}
   .day{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-  @media (max-width:480px){
+  @media (max-width:560px){
     .wrap{padding:10px}
     .card{padding:12px;border-radius:14px}
     .grid{gap:4px}
-    .day{padding:4px 5px;font-size:.88rem;border-radius:8px}
-    .count{font-size:.62rem;right:4px;bottom:3px}
-    .qm{font-size:.6rem;left:4px;bottom:17px}
-    .star,.hg{top:3px;right:3px;font-size:.72rem}
+    .day{aspect-ratio:auto;min-height:58px;padding:4px 4px 6px;font-size:.88rem;border-radius:8px}
+    .count{font-size:.62rem}
+    .qm{font-size:.58rem}
+    .star,.hg{font-size:.72rem}
   }
   .day.pick{outline:3px solid var(--accent);outline-offset:-3px;transform:scale(.94)}
   .day.anchor{outline-style:dashed}
@@ -132,7 +136,7 @@
   #help .hb ul{margin:4px 0;padding-left:20px}
   #help .hf{padding:10px 18px 16px;text-align:right}
   .sw{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:4px}
-  .day.hasnote::after{content:'';position:absolute;left:30%;right:30%;bottom:3px;height:3px;border-radius:2px;background:var(--accent)}
+  .day.hasnote::after{content:'';position:absolute;left:10px;right:10px;bottom:1px;height:3px;border-radius:2px;background:var(--accent)}
   .note{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:8px;background:var(--card)}
   .note .ntext{white-space:pre-wrap;margin:4px 0}
   .note .nbtns{display:flex;gap:6px;margin-top:6px}
@@ -777,14 +781,12 @@
           style = `style="background:color-mix(in srgb,var(--busy) ${pct}%,var(--cell));${b / total > .5 ? 'color:#3a0707' : ''}"`;
         }
       }
-      if (hang) inner += '<span class="hg">🎉</span>';
-      else if (all) inner += '<span class="star">⭐</span>';
-      if (total && !past) inner += `<span class="count">${f}/${total}</span>`;
+      const topIcon = hang ? '<span class="hg">🎉</span>' : all ? '<span class="star">⭐</span>' : '';
+      const my = me && !past ? stat(me, iso) : null;                     // your own mark
+      const mid = my ? `<span class="mine m-${my}">${ICON[my]}</span>` : '';
       const side = [m ? '?' + m : '', b && !hang ? '✕' + b : ''].filter(Boolean).join(' ');
-      if (side) inner += `<span class="qm">${side}</span>`;
-      const my = me && !past ? stat(me, iso) : null;
-      if (my) inner += `<span class="mine m-${my}">${ICON[my]}</span>`;     // your own mark
-      html += `<div class="${cls.join(' ')}" data-iso="${iso}" ${style}>${d}${inner}</div>`;
+      const cnt = total && !past ? `<span class="count">${f}/${total}</span>` : '';
+      html += `<div class="${cls.join(' ')}" data-iso="${iso}" ${style}><div class="dtop"><span class="dn">${d}</span>${topIcon}</div><div class="dmid">${mid}<span class="qm">${side}</span></div><div class="dbot">${cnt}</div></div>`;
     }
     $('#grid').innerHTML = html;
 
