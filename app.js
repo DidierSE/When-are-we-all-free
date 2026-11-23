@@ -410,7 +410,7 @@
   const noteHtml = n => `<div class="note">
       <div>📝 <b>${esc(n.by || 'someone')}</b> · ${n.from === n.to ? label(n.from) : `${label(n.from)} → ${label(n.to)}`}</div>
       <div class="ntext">${esc(n.text)}</div>
-      ${n.editedAt ? `<div class="muted" style="font-size:.8rem">edited ${fmt(n.editedAt)}</div>` : ''}
+      ${n.at || n.editedAt ? `<div class="muted nmeta">${n.at ? 'Added ' + fmt(n.at) : ''}${n.at && n.editedAt ? ' · ' : ''}${n.editedAt ? 'edited ' + fmt(n.editedAt) : ''}</div>` : ''}
       ${n.by === me ? `<div class="nbtns"><button class="small" data-nedit="${esc(n.id)}">✏️ Edit</button><button class="small" data-ndel="${esc(n.id)}">🗑 Delete</button></div>` : ''}
     </div>`;
   const noteSort = (a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : a.at - b.at);
