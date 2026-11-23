@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>When Are We Free?</title>
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <div class="wrap">
@@ -18,8 +18,8 @@
     <p class="muted hide" id="authLoading">Connecting to the calendar...</p>
     <div id="authBox">
       <div class="tabs">
-        <button id="authTabIn" class="on">Log in<small>I have an account</small></button>
-        <button id="authTabUp">Sign up<small>I'm new</small></button>
+        <button id="authTabIn" class="on">Log in</button>
+        <button id="authTabUp">Sign up</button>
       </div>
       <div class="stack" id="authIn">
         <select id="liName" aria-label="Your name"></select>
@@ -31,6 +31,7 @@
         </div>
         <button class="primary" id="liBtn">Log in</button>
         <p class="muted authhint">Can't find your name? You need to <button class="linkbtn" data-auth="up">sign up</button> first.</p>
+        <p class="muted authhint">Forgot your password? Send a message in the group chat and ask for a reset.</p>
       </div>
       <div class="stack hide" id="authUp">
         <input type="text" id="suName" maxlength="30" placeholder="Your name" autocomplete="username">
@@ -275,6 +276,6 @@
   </div>
 </div>
 
-<script src="app.js?v=1"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
