@@ -458,7 +458,7 @@
     const hnotes = h => {   // notes that cover this hangout's day + a quick "add note" box
       const list = Object.values(notes).filter(n => n.from <= h.date && h.date <= n.to).sort(noteSort);
       return `<div class="hnoteSec">${list.map(noteHtml).join('')}`
-        + (me ? `<div class="hnoteAdd"><input class="hnoteIn" data-date="${h.date}" maxlength="200" placeholder="📝 Add a note for this day..."><button class="small primary" data-hnadd="${h.date}">Add</button></div>` : '') + `</div>`;
+        + (me ? `<div class="hnoteAdd"><input type="text" class="hnoteIn" data-date="${h.date}" maxlength="200" placeholder="📝 Add a personal note for this day..."><button class="small primary" data-hnadd="${h.date}">Add</button></div>` : '') + `</div>`;
     };
     const card = (h, isPast) => `<div class="hcard ${isPast ? 'past' : ''}" data-hgo="${h.date}" title="Tap to show this day in the calendar">
         <div class="hhead">
