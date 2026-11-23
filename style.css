@@ -22,8 +22,10 @@
   .tabs{display:flex;background:var(--cell);border-radius:12px;padding:4px;gap:4px;margin-bottom:14px}
   .tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font-size:.9rem}
   .tabs button.on{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-  .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
   .nav h2{margin:0;font-size:1.15rem}
+  .todaybar{justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+  .todaybar #todayLabel{font-size:.9rem}
   .grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;user-select:none;-webkit-user-select:none}
   .dow{text-align:center;color:var(--muted);font-size:.8rem;font-weight:600;padding:2px 0}
   .day{position:relative;aspect-ratio:1/1;border-radius:10px;background:var(--cell);padding:5px 6px 7px;font-weight:600;font-size:1rem;cursor:pointer;border:2px solid transparent;display:flex;flex-direction:column;justify-content:space-between}
