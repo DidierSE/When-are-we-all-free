@@ -324,6 +324,7 @@
     const ix = index(), names = Object.keys(ix).sort((a, b) => a.localeCompare(b)), total = names.length;
     const hdays = new Set(Object.values(hangouts).map(h => h.date));
     $('#monthLabel').textContent = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
+    $('#todayLabel').textContent = 'Today is ' + new Date(TODAY + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 
     const first = new Date(view.y, view.m, 1);
     const lead = (first.getDay() + 6) % 7;
@@ -839,6 +840,11 @@
   };
   $('#prev').onclick = () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } render(); };
   $('#next').onclick = () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } render(); };
+  $('#goToday').onclick = () => {
+    const [y, m] = TODAY.split('-').map(Number);
+    view = {y, m: m - 1}; selected = TODAY; mode = 'cal'; closeMenu(); render();
+    $('#grid').scrollIntoView({behavior: 'smooth', block: 'center'});
+  };
   // ---------- log in / sign up ----------
   const clearAuthFields = () => ['liPw', 'liNew', 'liNew2', 'suName', 'suPw', 'suPw2'].forEach(id => { $('#' + id).value = ''; });
   const gotIn = msg => { saveLocal(); clearAuthFields(); mode = 'cal'; authSig = ''; render(); toast(msg); };
