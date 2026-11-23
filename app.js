@@ -377,6 +377,7 @@
     renderDetail(ix, names);
     renderNotes();
     renderHangouts(ix, names);
+    renderNextHang();
     renderBest(ix, names);
     renderPeople(ix, names);
     renderProfile();
@@ -454,6 +455,11 @@
       return `<div class="hmine"><span>Your status:</span>` + [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']].map(([k, t]) =>
         `<button class="small ${(k === 'f' ? cur === null : cur === k) ? 'cur' : ''}" data-hset="${k}" data-date="${h.date}">${t}</button>`).join('') + `</div>`;
     };
+    const hnotes = h => {   // notes that cover this hangout's day + a quick "add note" box
+      const list = Object.values(notes).filter(n => n.from <= h.date && h.date <= n.to).sort(noteSort);
+      return `<div class="hnoteSec">${list.map(noteHtml).join('')}`
+        + (me ? `<div class="hnoteAdd"><input class="hnoteIn" data-date="${h.date}" maxlength="200" placeholder="📝 Add a note for this day..."><button class="small primary" data-hnadd="${h.date}">Add</button></div>` : '') + `</div>`;
+    };
     const card = (h, isPast) => `<div class="hcard ${isPast ? 'past' : ''}" data-hgo="${h.date}" title="Tap to show this day in the calendar">
         <div class="hhead">
           <div class="hdate">📅 ${label(h.date)}${h.time ? ' · ' + esc(h.time) : ''}${isPast ? '' : `<span class="rel">${rel(h.date)}</span>`}</div>
@@ -463,6 +469,7 @@
         ${h.place ? `<div class="hmeta">📍 ${esc(h.place)}</div>` : ''}
         ${h.notes ? `<div class="hnotes">${esc(h.notes)}</div>` : ''}
         ${isPast ? '' : `<div class="hwho">Availability that day: ${whoFree(ix, names, h.date) || 'nobody has answered yet'}</div>${me ? mine(h) : ''}`}
+        ${isPast ? '' : hnotes(h)}
         <div class="hgo">📅 Tap the card to see this day in the calendar</div>
         <div class="hauthor">✍️ Written by <b>${esc(h.by || 'someone')}</b>${h.at ? ' · ' + fmt(h.at) : ''}`
         + (h.editedAt ? `<br>✏️ Last edited by <b>${esc(h.editedBy || 'someone')}</b> · ${fmt(h.editedAt)}` : '') + `</div>
@@ -470,8 +477,28 @@
     let html = up.length ? up.map(h => card(h, false)).join('')
       : '<p class="muted">No hangouts planned yet. When you\'ve agreed on a day, add it here with ➕ New hangout.</p>';
     if (past.length) html += `<details class="pastbox"><summary>Past hangouts (${past.length})</summary>${past.map(h => card(h, true)).join('')}</details>`;
-    el.innerHTML = html;
+    const typed = {}; el.querySelectorAll('.hnoteIn').forEach(i => { if (i.value) typed[i.dataset.date] = i.value; });
+    const focus = document.activeElement && document.activeElement.classList.contains('hnoteIn') ? document.activeElement.dataset.date : null;
+    el.innerHTML = html;                                       // typing in a note box survives live updates
+    el.querySelectorAll('.hnoteIn').forEach(i => { if (typed[i.dataset.date]) i.value = typed[i.dataset.date]; if (focus === i.dataset.date) i.focus(); });
   }
+
+  function renderNextHang() {   // "Next hangout in N days" banner on the calendar tab (worked out on the device, no extra Firebase traffic)
+    const el = $('#nextHang');
+    const next = Object.values(hangouts).filter(h => h.date >= TODAY).sort((a, b) => (a.date + (a.time || '')) < (b.date + (b.time || '')) ? -1 : 1)[0];
+    if (!next) { el.classList.add('hide'); el.innerHTML = ''; return; }
+    const n = Math.round((new Date(next.date + 'T00:00:00') - new Date(TODAY + 'T00:00:00')) / 864e5);
+    const when = n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : `in ${n} days`;
+    el.dataset.date = next.date;
+    el.innerHTML = `<span class="nhwhen">🎉 Next hangout${n > 1 ? ' ' + when : ': ' + when}</span><span class="nhtitle">${esc(next.title)} · ${label(next.date)}${next.time ? ' · ' + esc(next.time) : ''}</span>`;
+    el.classList.remove('hide');
+  }
+  $('#nextHang').addEventListener('click', () => {
+    const iso = $('#nextHang').dataset.date; if (!iso) return;
+    const [y, m] = iso.split('-').map(Number);
+    view = {y, m: m - 1}; selected = iso; render();
+    $('#grid').scrollIntoView({behavior: 'smooth', block: 'center'});
+  });
 
   function renderBest(ix, names) {
     const total = names.length, el = $('#best');
@@ -571,7 +598,21 @@
     hangouts[h.id] = h; hangPut(h);
     formOpen = false; editingId = null; render(); toast(msg);
   };
+  const addHangNote = date => {   // quick note on a hangout's day, written right on its card
+    if (!canEdit()) return;
+    const inp = [...document.querySelectorAll('#hangList .hnoteIn')].find(i => i.dataset.date === date);
+    const text = inp ? inp.value.trim() : '';
+    if (!text) { toast('Write your note first 👆'); if (inp) inp.focus(); return; }
+    const t = Date.now();
+    const n = {id: t.toString(36) + Math.random().toString(36).slice(2, 6), text, from: date, to: date, by: me, at: t, editedAt: 0};
+    notes[n.id] = n; notePut(n);
+    inp.value = ''; render(); toast('Note added 📝');
+  };
+  $('#hangList').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.classList.contains('hnoteIn')) { e.preventDefault(); addHangNote(e.target.dataset.date); } });
   $('#hangList').addEventListener('click', async e => {
+    if (await noteClick(e)) return;
+    const add = e.target.closest('[data-hnadd]');
+    if (add) { addHangNote(add.dataset.hnadd); return; }
     const st = e.target.closest('[data-hset]');
     if (st) {   // change your own status for the hangout's day
       const k = st.dataset.hset;
@@ -595,7 +636,7 @@
       return;
     }
     const go = e.target.closest('[data-hgo]');   // tapping the card itself jumps to its date in the calendar
-    if (go && !e.target.closest('button')) {
+    if (go && !e.target.closest('button, input, .note')) {
       const iso = go.dataset.hgo, [y, m] = iso.split('-').map(Number);
       view = {y, m: m - 1}; selected = iso; mode = 'cal'; closeMenu(); render();
       $('#grid').scrollIntoView({behavior: 'smooth', block: 'center'});
@@ -695,17 +736,20 @@
     selected = from; view = {y: +from.slice(0, 4), m: +from.slice(5, 7) - 1};
     noteOpen = false; editingNote = null; render(); toast('Note saved 📝');
   };
-  $('#calView').addEventListener('click', async e => {
+  const noteClick = async e => {   // Edit / Delete buttons on a note (calendar and hangout cards)
     const ed = e.target.closest('[data-nedit]');
-    if (ed) { const n = notes[ed.dataset.nedit]; if (n && n.by === me) openNoteForm(n); return; }
+    if (ed) { const n = notes[ed.dataset.nedit]; if (n && n.by === me) openNoteForm(n); return true; }
     const del = e.target.closest('[data-ndel]');
     if (del) {
-      const n = notes[del.dataset.ndel]; if (!n || n.by !== me) return;
+      const n = notes[del.dataset.ndel]; if (!n || n.by !== me) return true;
       const ok = await showModal({title: 'Delete note?', msg: `Delete this note for everyone? "${n.text.slice(0, 60)}"`,
         buttons: [{label: 'Cancel', value: false}, {label: 'Delete', value: true, danger: true}]});
       if (ok) { noteDel(n.id); render(); toast('Note deleted'); }
+      return true;
     }
-  });
+    return false;
+  };
+  $('#calView').addEventListener('click', noteClick);
 
   // ---------- controls ----------
   $('#tabCal').onclick = () => { mode = 'cal'; closeMenu(); render(); };
