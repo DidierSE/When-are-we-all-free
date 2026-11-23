@@ -324,7 +324,7 @@
     const ix = index(), names = Object.keys(ix).sort((a, b) => a.localeCompare(b)), total = names.length;
     const hdays = new Set(Object.values(hangouts).map(h => h.date));
     $('#monthLabel').textContent = new Date(view.y, view.m, 1).toLocaleDateString('en-GB', {month:'long', year:'numeric'});
-    $('#todayLabel').textContent = 'Today is ' + new Date(TODAY + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    const tl = $('#todayLabel'); if (tl) tl.textContent = 'Today is ' + new Date(TODAY + 'T00:00:00').toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 
     const first = new Date(view.y, view.m, 1);
     const lead = (first.getDay() + 6) % 7;
@@ -409,12 +409,26 @@
     return parts.join(' ');
   }
 
-  const noteHtml = n => `<div class="note">
-      <div>📝 <b>${esc(n.by || 'someone')}</b> · ${n.from === n.to ? label(n.from) : `${label(n.from)} → ${label(n.to)}`}</div>
+  // whenDay: ISO of the day being viewed (detail / hangout). null = All notes list.
+  // Multi-day notes get a clear "covers … (includes this day)" label so it's obvious
+  // the text isn't only about the day you're looking at.
+  const noteHtml = (n, whenDay) => {
+    const multi = n.from !== n.to;
+    let when;
+    if (multi) {
+      when = `${label(n.from)} → ${label(n.to)}`;
+      if (whenDay && whenDay !== n.from) when += ' · covers this day';
+      else if (whenDay) when += ' · starts this day';
+    } else {
+      when = label(n.from);
+    }
+    return `<div class="note${whenDay ? '' : ' njump'}" data-njump="${esc(n.from)}" title="${whenDay ? '' : 'Tap to open this date'}">
+      <div>📝 <b>${esc(n.by || 'someone')}</b> · ${when}</div>
       <div class="ntext">${esc(n.text)}</div>
       ${n.at || n.editedAt ? `<div class="muted nmeta">${n.at ? 'Added ' + fmt(n.at) : ''}${n.at && n.editedAt ? ' · ' : ''}${n.editedAt ? 'edited ' + fmt(n.editedAt) : ''}</div>` : ''}
       ${n.by === me ? `<div class="nbtns"><button class="small" data-nedit="${esc(n.id)}">✏️ Edit</button><button class="small" data-ndel="${esc(n.id)}">🗑 Delete</button></div>` : ''}
     </div>`;
+  };
   const noteSort = (a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : a.at - b.at);
 
   function renderDetail(ix, names) {
@@ -430,7 +444,7 @@
     if (everyone && selected >= TODAY && !here.length) html += '<div class="g">⭐ Everyone is free this day! Tap the day to plan a hangout.</div>';
     for (const h of here) html += `<div class="g">🎉 <b>${esc(h.title)}</b> is planned this day</div>`;
     const dayNotes = Object.values(notes).filter(n => n.from <= selected && selected <= n.to).sort(noteSort);
-    html += dayNotes.map(noteHtml).join('');
+    html += dayNotes.map(n => noteHtml(n, selected)).join('');
     el.innerHTML = html;
   }
 
@@ -438,7 +452,7 @@
     $('#noteForm').classList.toggle('hide', !noteOpen);
     const up = Object.values(notes).filter(n => n.to >= TODAY).sort(noteSort);
     $('#notesSum').textContent = `📝 All notes (${up.length})`;
-    $('#notesList').innerHTML = up.length ? up.map(noteHtml).join('') : '<p class="muted" style="margin:8px 0 0">No notes yet. Tap a day and choose Add note.</p>';
+    $('#notesList').innerHTML = up.length ? up.map(n => noteHtml(n, null)).join('') : '<p class="muted" style="margin:8px 0 0">No notes yet. Tap a day and choose Add note.</p>';
   }
 
   function renderHangouts(ix, names) {
@@ -458,7 +472,7 @@
     };
     const hnotes = h => {   // notes that cover this hangout's day + a quick "add note" box
       const list = Object.values(notes).filter(n => n.from <= h.date && h.date <= n.to).sort(noteSort);
-      return `<div class="hnoteSec">${list.map(noteHtml).join('')}`
+      return `<div class="hnoteSec">${list.map(n => noteHtml(n, h.date)).join('')}`
         + (me ? `<div class="hnoteAdd"><input type="text" class="hnoteIn" data-date="${h.date}" maxlength="200" placeholder="📝 Add a personal note for this day..."><button class="small primary" data-hnadd="${h.date}">Add</button></div>` : '') + `</div>`;
     };
     const card = (h, isPast) => `<div class="hcard ${isPast ? 'past' : ''}" data-hgo="${h.date}" title="Tap to show this day in the calendar">
@@ -737,7 +751,7 @@
     selected = from; view = {y: +from.slice(0, 4), m: +from.slice(5, 7) - 1};
     noteOpen = false; editingNote = null; render(); toast('Note saved 📝');
   };
-  const noteClick = async e => {   // Edit / Delete buttons on a note (calendar and hangout cards)
+  const noteClick = async e => {   // Edit / Delete / jump-to-date on a note
     const ed = e.target.closest('[data-nedit]');
     if (ed) { const n = notes[ed.dataset.nedit]; if (n && n.by === me) openNoteForm(n); return true; }
     const del = e.target.closest('[data-ndel]');
@@ -746,6 +760,17 @@
       const ok = await showModal({title: 'Delete note?', msg: `Delete this note for everyone? "${n.text.slice(0, 60)}"`,
         buttons: [{label: 'Cancel', value: false}, {label: 'Delete', value: true, danger: true}]});
       if (ok) { noteDel(n.id); render(); toast('Note deleted'); }
+      return true;
+    }
+    // Tap a note in All notes (or any .njump card) → open that date in the calendar
+    const jump = e.target.closest('.note.njump[data-njump]');
+    if (jump && !e.target.closest('button')) {
+      const iso = jump.dataset.njump;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+        const [y, m] = iso.split('-').map(Number);
+        view = {y, m: m - 1}; selected = iso; mode = 'cal'; closeMenu(); render();
+        $('#grid').scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
       return true;
     }
     return false;
