@@ -781,7 +781,18 @@
     try { await navigator.clipboard.writeText(link); toast('Invite link copied! Send it to your friends 🔗'); }
     catch (e) { showModal({title: 'Invite link', msg: link, buttons: [{label: 'Close', value: true, primary: true}]}); }
   };
-  $('#pfOut').onclick = () => { me = ''; tok = ''; authSig = ''; authMode = 'in'; saveLocal(); clearAuthFields(); mode = 'cal'; render(); toast('Logged out on this device'); };
+  $('#pfOut').onclick = async () => {
+    const ok = await showModal({
+      title: 'Log out?',
+      msg: "Are you sure you want to log out on this device? You'll need your password to get back in.",
+      buttons: [
+        {label: 'Cancel', value: false},
+        {label: 'Log out', value: true, danger: true}
+      ]
+    });
+    if (!ok) return;
+    me = ''; tok = ''; authSig = ''; authMode = 'in'; saveLocal(); clearAuthFields(); mode = 'cal'; render(); toast('Logged out on this device');
+  };
   $('#prev').onclick = () => { view.m--; if (view.m < 0) { view.m = 11; view.y--; } render(); };
   $('#next').onclick = () => { view.m++; if (view.m > 11) { view.m = 0; view.y++; } render(); };
   // ---------- log in / sign up ----------
@@ -789,6 +800,7 @@
   const gotIn = msg => { saveLocal(); clearAuthFields(); mode = 'cal'; authSig = ''; render(); toast(msg); };
 
   $('#authTabIn').onclick = () => { authMode = 'in'; renderAuth(); };
+  $('#authBox').addEventListener('click', e => { const b = e.target.closest('[data-auth]'); if (b) { authMode = b.dataset.auth; renderAuth(); } });
   $('#authTabUp').onclick = () => { authMode = 'up'; renderAuth(); };
   $('#liName').addEventListener('change', renderAuth);
   $('#authView').addEventListener('keydown', e => {
