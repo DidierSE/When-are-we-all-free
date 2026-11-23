@@ -449,7 +449,12 @@
       const n = Math.round((new Date(iso + 'T00:00:00') - new Date(TODAY + 'T00:00:00')) / 864e5);
       return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n > 1 ? `in ${n} days` : '';
     };
-    const card = (h, isPast) => `<div class="hcard ${isPast ? 'past' : ''}">
+    const mine = h => {   // your own status for that day, editable right on the card
+      const cur = stat(me, h.date);
+      return `<div class="hmine"><span>Your status:</span>` + [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']].map(([k, t]) =>
+        `<button class="small ${(k === 'f' ? cur === null : cur === k) ? 'cur' : ''}" data-hset="${k}" data-date="${h.date}">${t}</button>`).join('') + `</div>`;
+    };
+    const card = (h, isPast) => `<div class="hcard ${isPast ? 'past' : ''}" data-hgo="${h.date}" title="Tap to show this day in the calendar">
         <div class="hhead">
           <div class="hdate">📅 ${label(h.date)}${h.time ? ' · ' + esc(h.time) : ''}${isPast ? '' : `<span class="rel">${rel(h.date)}</span>`}</div>
           <div class="hbtns"><button class="small" data-hedit="${esc(h.id)}">✏️ Edit</button><button class="small" data-hdel="${esc(h.id)}">🗑 Delete</button></div>
@@ -457,7 +462,8 @@
         <div class="htitle">${esc(h.title)}</div>
         ${h.place ? `<div class="hmeta">📍 ${esc(h.place)}</div>` : ''}
         ${h.notes ? `<div class="hnotes">${esc(h.notes)}</div>` : ''}
-        ${isPast ? '' : `<div class="hwho">Availability that day: ${whoFree(ix, names, h.date) || 'nobody has answered yet'}</div>`}
+        ${isPast ? '' : `<div class="hwho">Availability that day: ${whoFree(ix, names, h.date) || 'nobody has answered yet'}</div>${me ? mine(h) : ''}`}
+        <div class="hgo">📅 Tap the card to see this day in the calendar</div>
         <div class="hauthor">✍️ Written by <b>${esc(h.by || 'someone')}</b>${h.at ? ' · ' + fmt(h.at) : ''}`
         + (h.editedAt ? `<br>✏️ Last edited by <b>${esc(h.editedBy || 'someone')}</b> · ${fmt(h.editedAt)}` : '') + `</div>
       </div>`;
@@ -566,6 +572,12 @@
     formOpen = false; editingId = null; render(); toast(msg);
   };
   $('#hangList').addEventListener('click', async e => {
+    const st = e.target.closest('[data-hset]');
+    if (st) {   // change your own status for the hangout's day
+      const k = st.dataset.hset;
+      if (setDay(st.dataset.date, k === 'f' ? null : k)) { persist(); render(); toast('Status updated'); }
+      return;
+    }
     const ed = e.target.closest('[data-hedit]');
     if (ed) { const h = hangouts[ed.dataset.hedit]; if (h) openHangForm(h); return; }
     const del = e.target.closest('[data-hdel]');
@@ -580,6 +592,13 @@
         ]
       });
       if (ok) { hangDel(h.id); render(); toast('Hangout deleted'); }
+      return;
+    }
+    const go = e.target.closest('[data-hgo]');   // tapping the card itself jumps to its date in the calendar
+    if (go && !e.target.closest('button')) {
+      const iso = go.dataset.hgo, [y, m] = iso.split('-').map(Number);
+      view = {y, m: m - 1}; selected = iso; mode = 'cal'; closeMenu(); render();
+      $('#grid').scrollIntoView({behavior: 'smooth', block: 'center'});
     }
   });
   // ---------- multi-select ----------
