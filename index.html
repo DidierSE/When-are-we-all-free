@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>When Are We Free?</title>
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 <div class="wrap">
@@ -65,6 +65,10 @@
         <button id="prev" aria-label="Previous month">‹</button>
         <h2 id="monthLabel"></h2>
         <button id="next" aria-label="Next month">›</button>
+      </div>
+      <div class="row todaybar">
+        <span class="muted" id="todayLabel"></span>
+        <button id="goToday" class="small">📅 Go to today</button>
       </div>
       <div class="grid" id="dows"></div>
       <div class="grid" id="grid" style="margin-top:6px"></div>
@@ -277,6 +281,6 @@
   </div>
 </div>
 
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
