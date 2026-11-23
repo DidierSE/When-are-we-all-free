@@ -158,7 +158,8 @@
   .hnoteSec{margin-top:8px}
   .hnoteSec .note{background:var(--cell)}
   .hnoteAdd{display:flex;gap:6px;margin-top:8px}
-  .hnoteAdd input{flex:1;min-width:0}
+  .hnoteAdd input{flex:1;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit}
+  .hnoteAdd input::placeholder{color:var(--muted)}
   .nexth{display:flex;flex-direction:column;gap:2px;background:color-mix(in srgb,var(--hang) 14%,var(--card));border:1px solid color-mix(in srgb,var(--hang) 45%,var(--line));border-radius:12px;padding:10px 12px;margin-bottom:12px;cursor:pointer}
   .nexth .nhwhen{font-weight:700;color:var(--hang)}
   .nexth .nhtitle{font-size:.9rem}
