@@ -70,7 +70,11 @@
   .hform label input,.hform label textarea{display:block;width:100%;min-width:0;margin-top:4px;background:var(--card)}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .hcard{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .hcard{cursor:pointer}
   .hcard.past{opacity:.7}
+  .hmine{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;font-size:.85rem;color:var(--muted)}
+  .hmine .small.cur{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
+  .hgo{margin-top:6px;font-size:.75rem;color:var(--muted)}
   .hhead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
   .hdate{font-weight:600;color:var(--accent)}
   .rel{font-weight:500;color:var(--muted);font-size:.85rem;margin-left:4px}
