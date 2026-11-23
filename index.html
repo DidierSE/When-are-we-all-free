@@ -13,13 +13,13 @@
 
   <div class="card hide" id="authView">
     <h2 style="margin:0 0 4px;font-size:1.2rem">👋 Welcome</h2>
-    <p class="muted" style="margin:0 0 10px">Log in to see the calendar, or sign up if you're new.</p>
+    <p class="muted" style="margin:0 0 10px"><b>First time here?</b> Tap <b>Sign up</b> to make your account. <b>Already have one?</b> Tap <b>Log in</b>.</p>
     <button class="small" id="helpBtn2" style="margin-bottom:14px">❓ How to use</button>
     <p class="muted hide" id="authLoading">Connecting to the calendar...</p>
     <div id="authBox">
       <div class="tabs">
-        <button id="authTabIn" class="on">Log in</button>
-        <button id="authTabUp">Sign up</button>
+        <button id="authTabIn" class="on">Log in<small>I have an account</small></button>
+        <button id="authTabUp">Sign up<small>I'm new</small></button>
       </div>
       <div class="stack" id="authIn">
         <select id="liName" aria-label="Your name"></select>
@@ -30,12 +30,14 @@
           <input type="password" id="liNew2" placeholder="Repeat password" autocomplete="new-password">
         </div>
         <button class="primary" id="liBtn">Log in</button>
+        <p class="muted authhint">Can't find your name? You need to <button class="linkbtn" data-auth="up">sign up</button> first.</p>
       </div>
       <div class="stack hide" id="authUp">
         <input type="text" id="suName" maxlength="30" placeholder="Your name" autocomplete="username">
         <input type="password" id="suPw" placeholder="Choose a password (at least 4 characters)" autocomplete="new-password">
         <input type="password" id="suPw2" placeholder="Repeat password" autocomplete="new-password">
         <button class="primary" id="suBtn">Sign up</button>
+        <p class="muted authhint">Already signed up before? <button class="linkbtn" data-auth="in">Log in</button> instead.</p>
       </div>
     </div>
   </div>
