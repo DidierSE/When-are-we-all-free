@@ -100,6 +100,7 @@
   details.bulk .row{margin-top:8px}
   .sect{margin:20px 0 8px;font-size:1rem}
   .grid,.nav{max-width:100%}
+  .dhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .dtop{display:flex;justify-content:space-between;align-items:flex-start;gap:2px;line-height:1.1}
   .dmid{flex:1;display:flex;align-items:center;justify-content:space-between;gap:2px;min-height:0}
   .dbot{display:flex;justify-content:flex-end;align-items:flex-end;gap:2px;line-height:1.1;min-height:10px}
@@ -370,6 +371,7 @@
         <li>📝 <b>Add note</b>: write something about that day</li>
         <li>🎉 <b>Plan hangout</b>: start a confirmed plan on that day</li>
       </ul>
+      <p>To deselect a day, tap it again, tap anywhere outside the menu, or press <b>✕ Deselect</b> in the panel under the calendar.</p>
       <p>The panel under the calendar shows who is free, not sure or busy that day, plus any notes and hangouts.</p>
 
       <h4>Change several days at once</h4>
@@ -707,7 +709,13 @@
     m.style.left = left + 'px'; m.style.top = top + 'px';
     menuEl = m;
   }
-  document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); });
+  document.addEventListener('pointerdown', e => {
+    if (menuEl && !menuEl.contains(e.target)) {
+      closeMenu();
+      // tapping anywhere outside (not on another day) also deselects the day
+      if (e.target.closest && !e.target.closest('#grid .day[data-iso]') && selected && !selMode) { selected = null; render(); }
+    }
+  });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
   window.addEventListener('scroll', closeMenu, {passive: true});
   window.addEventListener('resize', closeMenu);
@@ -841,7 +849,7 @@
   function renderDetail(ix, names) {
     const el = $('#detail');
     if (!selected) { el.innerHTML = '<span class="muted">Tap a day to set your status, add a note or plan a hangout. Who is free shows up here.</span>'; return; }
-    let html = `<b>${label(selected)}</b>`;
+    let html = `<div class="dhead"><b>${label(selected)}</b><button class="small" data-desel="1" title="Deselect this day">✕ Deselect</button></div>`;
     for (const [k, title] of [['f', '✅ Free'], ['m', '❓ Not sure'], ['b', '❌ Busy']]) {
       const list = k === 'f' ? names.filter(n => isFree(ix, n, selected)) : names.filter(n => ix[n][k].has(selected));
       if (list.length) html += `<div class="g">${title}: ${list.map(n => chipOf(ix, n, k, selected)).join('')}</div>`;
@@ -940,6 +948,7 @@
       } else if (picked.has(iso)) picked.delete(iso); else picked.add(iso);
       selected = iso; render(); return;
     }
+    if (iso === selected) { selected = null; render(); return; }   // tap the selected day again = deselect
     selected = iso; render();
     if (iso < TODAY || !canEdit()) return;                      // past days: just look
     const cellNow = [...d_grid().querySelectorAll('.day[data-iso]')].find(x => x.dataset.iso === iso) || el;
@@ -951,6 +960,7 @@
       k => { if (k === 'note') openNoteForm(null, iso); else openHangForm(null, iso); });
   });
   const d_grid = () => $('#grid');
+  $('#detail').addEventListener('click', e => { if (e.target.closest('[data-desel]')) { selected = null; render(); } });
 
   // ---------- hangouts ----------
   function openHangForm(h, date) {
