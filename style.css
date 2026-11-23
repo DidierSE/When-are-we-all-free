@@ -154,3 +154,4 @@
   #modal .mbtns .danger{background:var(--danger);color:#fff;border-color:var(--danger)}
   .authhint{margin:2px 0 0;font-size:.85rem}
   .linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;font:inherit;cursor:pointer;min-height:0}
+  .note .nmeta{font-size:.75rem}
